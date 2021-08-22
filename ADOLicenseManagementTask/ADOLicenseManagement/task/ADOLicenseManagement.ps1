@@ -204,6 +204,7 @@ try {
               UserEmail    = "$($User.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Skipped'
+              Remark     = '_Excluded'
             } | Export-Csv -Path ActionedUsersLog.csv -NoTypeInformation -Append
             continue
           }
