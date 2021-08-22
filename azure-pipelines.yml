@@ -4,6 +4,7 @@
 
 #name: $(TaskName)Task_$(Major).$(rev:r).$(Patch)_$(TaskName)  # build numbering format
 name: $(Major).$(Minor).$(Patch)  # build numbering format
+# I think the pipeline should also have a name to it for extensions
 
 
 trigger:
