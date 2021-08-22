@@ -124,7 +124,7 @@ stages:
             # we don't need to DownloadPipelineArtifact as this is done automatically
             - template: YAMLTemplates\publish-extension.yml
               parameters:
-                 vsixPath: '$(Agent.BuildDirectory)\\vsix\\$(PublisherID).$(ExtensionID)-$(Build.BuildNumber).vsix'
+                 vsixPath: '$(Agent.BuildDirectory)\\vsix\\**.vsix'
                  extensionTag: '$(privateExtentionsTag)'
                  extensionVisibility: private
 
@@ -144,7 +144,7 @@ stages:
               # we don't need to DownloadPipelineArtifact as this is done automatically
               - template: YAMLTemplates\publish-extension.yml
                 parameters:
-                   vsixPath: '$(Agent.BuildDirectory)\\vsix\\$(PublisherID).$(ExtensionID)-$(Build.BuildNumber).vsix'
+                   vsixPath: '$(Agent.BuildDirectory)\\vsix\\**.vsix'
                    extensionTag: 'public'
                    extensionVisibility: public
 
