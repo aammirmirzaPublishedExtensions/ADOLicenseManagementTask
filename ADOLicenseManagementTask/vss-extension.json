@@ -43,17 +43,7 @@
     },
     "support": {
       "uri": "https://marketplace.visualstudio.com/items?itemName=AammirMirza.CP-ADOLicenseManagementpublic&ssr=false#qna"
-    },
-    "source": {
-      "uri": "https://github.com/aammirmirza/ADOLicenseManagementTask"
-    },
-    "issues": {
-      "uri": "https://github.com/aammirmirza/ADOLicenseManagementTask/issues"
     }
-  },
-  "repository": {
-    "type": "git",
-    "uri": "https://github.com/aammirmirza/ADOLicenseManagementTask"
   },
   "content": {
     "details": {
