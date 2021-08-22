@@ -6,7 +6,7 @@ Use to manage Azure DevOps License cost. For un-used licenses it changes the use
 
 Extension takes a close look at the number of Visual Studio Team Services subscribers in the organization and make sure that entitles users actively using their license.
 
-<span style="background-color: #ff1313">With entitlemen changes _(Changing un-used Azure DevOps licences to STAKEHOLDER)_ the cost can be reduced for _Basic and Basic + Test_ user licenses.
+<span style="background-color: #83DFBE">With entitlemen changes _(Changing un-used Azure DevOps licences to STAKEHOLDER)_ the cost can be reduced for _Basic and Basic + Test_ user licenses.
 You can run the task accross all the organization, based on number of days 'last used' or 'active status' within the days.</span>
 
 ## Platform
@@ -109,8 +109,8 @@ Please make sure to update tests as appropriate.
 
 E.g:
 
-|Organization    |Licensed                       |UserEmail                    |Remark|                    |
-|----------------|-------------------------------|-----------------------------|-----------|-----------------------------|
+|Organization    |Licensed                       |UserEmail                    |Remark|
+|----------------|-------------------------------|-----------------------------|-----------|
 |myorganization|Stakeholder            |myemai@email.com          |_NeverLoggedIn|
 
 * ` Feature added to consider all those users whome access granted bit they never logged-in even for the first time. Saving the license cost for such users as well.
