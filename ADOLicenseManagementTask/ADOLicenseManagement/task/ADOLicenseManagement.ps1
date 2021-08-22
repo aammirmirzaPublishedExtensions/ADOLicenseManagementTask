@@ -80,6 +80,7 @@ try {
   $aEV = 0
   $Orges = [string[]]($Organizations -split ',').replace(' ' , '')
   Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
+  $randomNumber = (Get-Random -Maximum 9999999)
   foreach ($Org in $Orges) {
     ('=' * 75)
     $Org = $Org.replace("'" , "")
@@ -128,7 +129,7 @@ try {
             Organization = "$($Org)"
             Licensed     = 'Stakeholder'
             Remark     = '_NeverLoggedIn'
-          } | Export-Csv -Path ActionedUsersLog.csv -NoTypeInformation -Append
+          } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
           # send email notofication to user
           if ($emailNotify.Contains("true")) {
             sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
@@ -144,7 +145,7 @@ try {
               Organization = "$($Org)"
               Licensed     = 'Skipped'
               Remark     = '_Excluded'
-            } | Export-Csv -Path ActionedUsersLog.csv -NoTypeInformation -Append
+            } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
             continue
           }
           # if($User){
@@ -157,7 +158,7 @@ try {
             Organization = "$($Org)"
             Licensed     = 'Error_changing_license'
             Remark     = '_OrgAdminOrPermissionIssue'
-          } | Export-Csv -Path ActionedUsersLog.csv -NoTypeInformation -Append
+          } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
           # Grouping of errors
           Write-Host "##[group]Output Variables for error handeling"
           Write-Host "##[error]Error message : $errorValue"
@@ -176,7 +177,7 @@ try {
     if ($UsersWhoDidntLoggedForMonths) {
       foreach ($User in $UsersWhoDidntLoggedForMonths) {
         if (!($usersExcludedFromLicenseChange.Contains($User.User.mailAddress))) {
-          if (!(Import-Csv .\ActionedUsersLog.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress })) {
+          if (!(Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress })) {
             $Response = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $User.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
           }
         }
@@ -189,7 +190,7 @@ try {
             Organization = "$($Org)"
             Licensed     = 'Stakeholder'
             Remark     = "_inActive_$($NumberOfMonths)_months"
-          } | Export-Csv -Path ActionedUsersLog.csv -NoTypeInformation -Append
+          } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
           # send email notofication to user
           if ($emailNotify.Contains("true")) {
             sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
@@ -204,11 +205,11 @@ try {
               UserEmail    = "$($User.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Skipped'
-              Remark     = '_Excluded'
-            } | Export-Csv -Path ActionedUsersLog.csv -NoTypeInformation -Append
+              Remark     = "_Skipped"
+            } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
             continue
           }
-          elseif (Import-Csv .\ActionedUsersLog.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress }) {
+          elseif (Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress }) {
             Write-Host "##[section] $($User.User.mailAddress) Access Level already downgraded, as the user never logged-in."
             continue
           }
@@ -222,7 +223,7 @@ try {
               Organization = "$($Org)"
               Licensed     = 'Error_changing_license'
               Remark     = '_OrgAdminOrPermissionIssue'
-            } | Export-Csv -Path ActionedUsersLog.csv -NoTypeInformation -Append
+            } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
             # Grouping of errors
             Write-Host "##[group]Output Variables for error handeling"
             Write-Host "##[error]Error message : $errorValue"
@@ -249,11 +250,11 @@ try {
     Write-Host "##vso[task.complete result=Failed;]Invocation fail due to authentication issue or incorrect org name"
     exit 1
   }
-  Get-Content -Path ActionedUsersLog.csv -ErrorAction SilentlyContinue
-  Write-Host "##[command]Log file 'ActionedUsersLog.csv' has been created. Use copy file task and publish artifact task to get it packaged as build artifact"
+  Get-Content -Path ActionedUsersLog_$randomNumber.csv -ErrorAction SilentlyContinue
+  Write-Host "##[command]Log file 'ActionedUsersLog_$randomNumber.csv' has been created. Use copy file task and publish artifact task to get it packaged as build artifact"
   try {
     if (($env:Agent_OS) -eq 'Windows_NT') {
-      Copy-Item ActionedUsersLog.csv -Destination "$($ENV:Build_ArtifactStagingDirectory)\Logs.csv" -Recurse -ErrorAction SilentlyContinue
+      Copy-Item ActionedUsersLog_$randomNumber.csv -Destination "$($ENV:Build_ArtifactStagingDirectory)\Logs.csv" -Recurse -ErrorAction SilentlyContinue
     }
   }
   catch {
