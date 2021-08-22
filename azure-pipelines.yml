@@ -1,0 +1,167 @@
+# pre reqs
+# npm install azure-pipelines-task-lib
+# npm i -g rimraf tslint
+
+#name: $(TaskName)Task_$(Major).$(rev:r).$(Patch)_$(TaskName)  # build numbering format
+name: $(Major).$(Minor).$(Patch)_$(TaskName)  # build numbering format
+
+
+trigger:
+  branches:
+    include:
+    - main # branch names which will trigger a build
+  paths:
+    include:
+    - ADOLicenseManagementTask
+    - AkamaiFastPurgeTask # file paths which must match to trigger a build, cannot be a variable
+    - AzureSecurityCenter
+
+variables:
+  # Below 3 vars declared in the pipeline UI
+  #  major
+  #  minor
+  # TaskName
+  extensionRoot: '$(TaskName)Task' # constructing a extensionroot name from pipeline variable E.g xxxxTask
+  ExtensionID: 'CP-$(TaskName)' # constructing a extensionID name from pipeline variable E.g. CP-xxxxx
+  artifactLocationName: 'compiled_vsix'
+  privateExtentionsTag: 'Private'
+  taskID: 'AammirMirza'
+  PublisherID: 'AammirMirza'
+  vmImage: 'windows-latest'
+  # - group: BuildUpdatingExtension
+    # this group includes the following variables
+    #  extensionRoot - working folder E.g- abcTask
+    #  PublisherID  - Marketplace publisher
+    #  ExtensionID - Marketplace extension id
+    #  vmImage - name of Azure DevOps pool to use
+    #  artifactLocationName -  folder the artifact to push is stored in
+    #  privateExtentionsTag - tag to show if private (else blank)
+    #  taskID - Marketplace ID of task
+    #  wikiFilename - name of generated docs files
+    #  githubPAT - for testing
+    #  AzureDevOpsPAT - for testing
+stages:
+  - stage: Build
+    jobs:
+    - job: Build
+      pool:
+        vmImage: '$(vmImage)'
+        demands: npm
+      steps:
+      # version all the task in the extension
+      - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+        displayName: 'Setting the version for tasks in extension'
+        inputs:
+          rootDirectory: '$(Build.SourcesDirectory)/$(extensionRoot)'
+          targetFiles: '**\\task.json'
+
+      # for each Node based task we must transpile it
+      - template: YAMLTemplates\build-node-task.yml
+        parameters:
+          extensionRoot: '$(extensionRoot)'
+          taskName: '$(TaskName)'
+
+      # - template: $(Build.SourcesDirectory)\YAMLTemplates\build-node-task.yml
+      #   parameters:
+      #     extensionRoot: '$(extensionRoot)'
+      #     taskName: 'BuildRetensionTask'
+
+      # - template: $(Build.SourcesDirectory)\YAMLTemplates\build-node-task.yml
+      #   parameters:
+      #     extensionRoot: '$(extensionRoot)'
+      #     taskName: 'GetBuildDefinitionVariableValueTask'
+
+      - task: TfxInstaller@3
+        displayName: 'Install Tfx Tool'
+        inputs:
+          version: 'v0.8.x'
+          checkLatest: true
+
+      - task: ms-devlabs.vsts-developer-tools-build-tasks.package-extension-build-task.PackageAzureDevOpsExtension@3
+        displayName: 'Package and Publish Extension as a PROD Package '
+        inputs:
+          rootFolder: '$(extensionRoot)'
+          outputPath: '$(Build.ArtifactStagingDirectory)\\$(artifactLocationName)'
+          publisherId: '$(PublisherID)'
+          extensionId: '$(ExtensionID)'
+          extensionVersion: '$(Build.BuildNumber)'
+          updateTasksVersion: true
+          updateTasksVersionType: minor
+          extensionVisibility: private
+      - task: CopyFiles@2
+        displayName: 'Copy Docs'
+        inputs:
+          SourceFolder: $(extensionRoot)
+          Contents: |
+            readme.md
+            vss-extension.json
+            **\task\task.json
+          TargetFolder: '$(Build.ArtifactStagingDirectory)\\$(artifactLocationName)'
+
+      - task: PublishPipelineArtifact@1
+        displayName: 'Publish vsix'
+        inputs:
+          artifactName: 'vsix'
+          publishLocation: pipeline
+          targetPath: '$(Build.ArtifactStagingDirectory)\\$(artifactLocationName)'
+          artifact: 'vsix'
+        condition: succeededOrFailed()
+
+  - stage: Private
+    jobs:
+    - deployment: Private_Deployment
+      timeoutInMinutes: 0
+      environment: 'Azure DevOps Marketplace (Private)'
+      pool:
+        vmImage: '$(vmImage)'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - powershell: |
+                ls '$(Agent.BuildDirectory)\\vsix\\'
+              displayName: 'PowerShell Script'
+            # we don't need to DownloadPipelineArtifact as this is done automatically
+            - template: YAMLTemplates\publish-extension.yml
+              parameters:
+                 vsixPath: '$(Agent.BuildDirectory)\\vsix\\$(PublisherID).$(ExtensionID)-$(Build.BuildNumber).vsix'
+                 extensionTag: '$(privateExtentionsTag)'
+                 extensionVisibility: private
+
+  - stage: Public
+    dependsOn: Private
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+    - deployment: Public_Deployment
+      timeoutInMinutes: 0
+      environment: 'Azure DevOps Marketplace (Public)'
+      pool:
+        vmImage: '$(vmImage)'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              # we don't need to DownloadPipelineArtifact as this is done automatically
+              - template: YAMLTemplates\publish-extension.yml
+                parameters:
+                   vsixPath: '$(Agent.BuildDirectory)\\vsix\\$(PublisherID).$(ExtensionID)-$(Build.BuildNumber).vsix'
+                   extensionTag: 'public'
+                   extensionVisibility: public
+
+    # - job: Post_Publish
+    #   dependsOn: Public_Deployment
+    #   pool:
+    #     vmImage: '$(vmImage)'
+    #   steps:
+    #   - task: petergroenewegen.PeterGroenewegen-Xpirit-Vsts-Release-Twitter.Xpirit-Vsts-Release-Twitter.Twitter@1
+    #     displayName: 'Send Tweet about new release'
+    #     inputs:
+    #       TwitterEndPoint: 'Twitter Richard'
+    #       Message: 'I have just released Version $(Build.BuildNumber) of my Azure DevOps Pipeline $(Build.DefinitionName) http://bit.ly/VSTS-RF $(OutputedText) '
+
+    #   - task: richardfennellBM.BM-VSTS-BuildUpdating-Tasks-DEV.BuildVariableTask-Task.BuildVariableTask@1
+    #     displayName: 'Update Build Variable'
+    #     inputs:
+    #       variable: Minor
+    #       mode: Autoincrement
+    #       usedefaultcreds: false

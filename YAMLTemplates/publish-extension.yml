@@ -1,0 +1,23 @@
+parameters:
+- name: vsixPath
+  type: string
+- name: extensionTag
+  type: string
+  default: ''
+- name: extensionVisibility
+  type: string
+
+steps:
+- task: TfxInstaller@3
+  inputs:
+    version: 'v0.8.x'
+
+- task: ms-devlabs.vsts-developer-tools-build-tasks.publish-extension-build-task.PublishAzureDevOpsExtension@3
+  displayName: 'Publish Extension'
+  inputs:
+    connectedServiceName: 'myTestConn' # it should be for allOrganization level else it will result authentication error
+    fileType: vsix
+    vsixFile: '${{parameters.vsixPath}}'
+    extensionTag: '${{parameters.extensionTag}}'
+    updateTasksVersion: false
+    extensionVisibility: ${{parameters.extensionVisibility}}
