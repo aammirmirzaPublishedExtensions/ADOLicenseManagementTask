@@ -3,7 +3,7 @@
 # npm i -g rimraf tslint
 
 #name: $(TaskName)Task_$(Major).$(rev:r).$(Patch)_$(TaskName)  # build numbering format
-name: $(Major).$(Minor).$(Patch)_$(TaskName)  # build numbering format
+name: $(Major).$(Minor).$(Patch)  # build numbering format
 
 
 trigger:
