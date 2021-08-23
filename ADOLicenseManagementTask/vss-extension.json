@@ -25,8 +25,8 @@
   ],
   "badges": [
         {
-            "href": "https://dev.azure.com/containerized1984/extensionLifeCycle/_apis/build/status/allExtensions?branchName=main",
-            "uri": "https://dev.azure.com/containerized1984/extensionLifeCycle/_apis/build/status/allExtensions?branchName=main",
+            "href": "https://dev.azure.com/containerized1984/extensionLifeCycle/_apis/build/status/Extension_Management/GitHub.aammirmirza.ADOLicenseManagementTask?repoName=aammirmirzaPublishedExtensions%2FADOLicenseManagementTask&branchName=main",
+            "uri": "https://dev.azure.com/containerized1984/extensionLifeCycle/_apis/build/status/Extension_Management/GitHub.aammirmirza.ADOLicenseManagementTask?repoName=aammirmirzaPublishedExtensions%2FADOLicenseManagementTask&branchName=main",
             "description": "Build status of extension"
         }
     ],
