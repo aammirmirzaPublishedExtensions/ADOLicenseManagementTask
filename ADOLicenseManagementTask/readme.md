@@ -7,6 +7,7 @@ Use to manage Azure DevOps License cost. For un-used licenses it changes the use
 Extension takes a close look at the number of Visual Studio Team Services subscribers in the organization and make sure that entitles users actively using their license.
 
 <span style="background-color: #83DFBE">With entitlemen changes _(Changing un-used Azure DevOps licences to STAKEHOLDER)_ the cost can be reduced for _Basic and Basic + Test_ user licenses.
+
 You can run the task accross all the organization, based on number of days 'last used' or 'active status' within the days.</span>
 
 ## Platform
@@ -33,7 +34,23 @@ Available task name after installation - 'ADO License Management'
 
 * Skipping the check for service accounts or specific automation users can be achieved from advanced option within the task.
 
-* [New Feature] Logs (csv) availble for artifact packaging as .CSV. Available output in pipeline artifact `(Limited feature for windows agent)`.
+* Logs (csv) availble for artifact packaging as .CSV. Available output in pipeline artifact `(Limited feature for windows agent)`.
+* [New Feature] Send email **notofication toggle** added with SMTP configuration, to notify actioned users. Also csv log has random prefix added so that it should not append to existing 
+csv file (in case of self-hosted agent)
+
+## Operation arguments
+
+Available command line options are:
+
+* `-Organizations` Delimited list of organizations to perform cost savings for AzDO user licenses. E.g. Organization1,Organization2,Org3 etc.
+* `-AccessToken` Authentication token used in client auth. This token need to be generated for 'All Organization' in case of multiple organizations.
+* `-NumberOfMonths` Number of months for checking if user last logged-in.
+* `-usersExcludedFromLicenseChange` As a advanced feature you can mention delimited list of users email address that need to be excluded for removing paid licenses and making entitlement as Stakeholder.
+
+#### Minimum required previlages for the token to perform the task
+
+* Members Entitlement Management (Read & Write)
+
 
 ## Operation arguments
 
@@ -86,6 +103,7 @@ steps:
 
  Placeholder
 
+
 #### Minimum required previlages for the token to perform the task
 
 * Members Entitlement Management (Read & Write)
@@ -117,7 +135,6 @@ E.g:
 
 |Organization    |Licensed                       |UserEmail                    |Remark|
 |----------------|-------------------------------|-----------------------------|-----------|
-|myorganization|Stakeholder            |myemai@email.com          |_NeverLoggedIn|
 
 * ` Feature added to consider all those users whome access granted bit they never logged-in even for the first time. Saving the license cost for such users as well.
 
@@ -132,7 +149,7 @@ E.g:
 
 ```
 
-#### v1.159.1
+#### v1.169.1
 
 New feature for email notification added, along with refinement/correction to the existing repeated record entries within the csv logs.
 
