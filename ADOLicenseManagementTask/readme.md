@@ -35,6 +35,21 @@ Available task name after installation - 'ADO License Management'
 
 * [New Feature] Logs (csv) availble for artifact packaging as .CSV. Available output in pipeline artifact `(Limited feature for windows agent)`.
 
+## Operation arguments
+
+Available command line options are:
+
+* **`Organizations`** Delimited list of organizations to perform cost savings for AzDO user licenses. E.g. Organization1,Organization2,Org3 etc.
+* **`AccessToken`** Authentication token used in client auth. This token need to be generated for 'All Organization' in case of multiple organizations.
+* **`NumberOfMonths`** Number of months for checking if user last logged-in.
+* **`usersExcludedFromLicenseChange`** As a advanced feature you can mention delimited list of users email address that need to be excluded for removing paid licenses and making entitlement as Stakeholder.
+* **`emailNotify`** When set to 'True', It will send eMail notification to all actioned user. Allows you to add email body content.
+  * **`SMTP_UserName`** Username (email address) from where the will be send. It is the same as credential username for SMTP.
+  * **`SMTP_Password`** Password for the SMTP username
+  * **`sentFrom`** Address that shpuld be used to handle reply-to. Address should exist in Office365. If nothing provided SMTP_Username will be default.
+  * **`adiitionalComment`** eMail message body additional to default mail content.
+    * **`Default mail content`** Your license has been downgraded to STAKEHOLDER.
+
 #### YAML Usage
 
 ```yaml
@@ -70,15 +85,6 @@ steps:
 ## GIF for reference
 
  Placeholder
-
-## Operation arguments
-
-Available command line options are:
-
-* `-Organizations` Delimited list of organizations to perform cost savings for AzDO user licenses. E.g. Organization1,Organization2,Org3 etc.
-* `-AccessToken` Authentication token used in client auth. This token need to be generated for 'All Organization' in case of multiple organizations.
-* `-NumberOfMonths` Number of months for checking if user last logged-in.
-* `-usersExcludedFromLicenseChange` As a advanced feature you can mention delimited list of users email address that need to be excluded for removing paid licenses and making entitlement as Stakeholder.
 
 #### Minimum required previlages for the token to perform the task
 
