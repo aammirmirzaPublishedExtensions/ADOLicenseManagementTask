@@ -210,7 +210,7 @@ try {
             continue
           }
           elseif (Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress }) {
-            Write-Host "##[section] $($User.User.mailAddress) Access Level already downgraded, as the user never logged-in."
+            Write-Host "$($User.User.mailAddress) Access Level already downgraded, as the user never logged-in."
             continue
           }
           else {
