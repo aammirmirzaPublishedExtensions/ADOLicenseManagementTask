@@ -36,7 +36,7 @@ function sendEmailNotification {
   }
   # write-host $mail
   try {
-    Send-MailMessage @mail -EA SilentlyContinue
+    Send-MailMessage @mail -EA SilentlyContinue -WarningAction silentlyContinue
     Write-Host "##[section]$($to) - has been notified"
   }
   catch {
