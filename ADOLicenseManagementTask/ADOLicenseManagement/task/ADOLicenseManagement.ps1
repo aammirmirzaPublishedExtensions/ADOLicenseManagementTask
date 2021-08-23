@@ -36,7 +36,7 @@ function sendEmailNotification {
   }
   # write-host $mail
   try {
-    Send-MailMessage @mail -EA SilentlyContinue
+    Send-MailMessage @mail -EA SilentlyContinue -WarningAction silentlyContinue
     Write-Host "##[section]$($to) - has been notified"
   }
   catch {
@@ -210,7 +210,7 @@ try {
             continue
           }
           elseif (Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress }) {
-            Write-Host "##[section] $($User.User.mailAddress) Access Level already downgraded, as the user never logged-in."
+            Write-Host "$($User.User.mailAddress) Access Level already downgraded, as the user never logged-in."
             continue
           }
           else {

@@ -42,18 +42,18 @@
       "uri": "https://docs.microsoft.com/en-us/azure/devops/organizations/billing/buy-basic-access-add-users?view=azure-devops"
     },
     "support": {
-      "uri": "https://marketplace.visualstudio.com/items?itemName=AammirMirza.CP-ADOLicenseManagementpublic&ssr=false#qna"
+      "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask/issues"
     },
     "source": {
-      "uri": "https://github.com/aammirmirza/ADOLicenseManagementTask"
+      "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask"
     },
     "issues": {
-      "uri": "https://github.com/aammirmirza/ADOLicenseManagementTask/issues"
+      "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask/issues"
     }
   },
   "repository": {
     "type": "git",
-    "uri": "https://github.com/aammirmirza/ADOLicenseManagementTask"
+    "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask"
   },
   "content": {
     "details": {

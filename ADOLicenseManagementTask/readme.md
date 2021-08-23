@@ -6,7 +6,8 @@ Use to manage Azure DevOps License cost. For un-used licenses it changes the use
 
 Extension takes a close look at the number of Visual Studio Team Services subscribers in the organization and make sure that entitles users actively using their license.
 
-<span style="background-color: #95B2E7">With entitlemen changes _(Changing un-used Azure DevOps licences to STAKEHOLDER)_ the cost can be reduced for _Basic and Basic + Test_ user licenses.
+<span style="background-color: #83DFBE">With entitlemen changes _(Changing un-used Azure DevOps licences to STAKEHOLDER)_ the cost can be reduced for _Basic and Basic + Test_ user licenses.
+
 You can run the task accross all the organization, based on number of days 'last used' or 'active status' within the days.</span>
 
 ## Platform
@@ -51,6 +52,21 @@ Available command line options are:
 * Members Entitlement Management (Read & Write)
 
 
+## Operation arguments
+
+Available command line options are:
+
+* **`Organizations`** Delimited list of organizations to perform cost savings for AzDO user licenses. E.g. Organization1,Organization2,Org3 etc.
+* **`AccessToken`** Authentication token used in client auth. This token need to be generated for 'All Organization' in case of multiple organizations.
+* **`NumberOfMonths`** Number of months for checking if user last logged-in.
+* **`usersExcludedFromLicenseChange`** As a advanced feature you can mention delimited list of users email address that need to be excluded for removing paid licenses and making entitlement as Stakeholder.
+* **`emailNotify`** When set to 'True', It will send eMail notification to all actioned user. Allows you to add email body content.
+  * **`SMTP_UserName`** Username (email address) from where the will be send. It is the same as credential username for SMTP.
+  * **`SMTP_Password`** Password for the SMTP username
+  * **`sentFrom`** Address that shpuld be used to handle reply-to. Address should exist in Office365. If nothing provided SMTP_Username will be default.
+  * **`adiitionalComment`** eMail message body additional to default mail content.
+    * **`Default mail content`** Your license has been downgraded to STAKEHOLDER.
+
 #### YAML Usage
 
 ```yaml
@@ -87,6 +103,11 @@ steps:
 
  Placeholder
 
+
+#### Minimum required previlages for the token to perform the task
+
+* Members Entitlement Management (Read & Write)
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
@@ -112,9 +133,8 @@ Please make sure to update tests as appropriate.
 
 E.g:
 
-|Organization  |Licensed                |UserEmail                   |Remark|
-|--------------|-----------------------|-----------------------------|-----------|
-|myorganization|Stakeholder            |myemai@email.com          |_NeverLoggedIn|
+|Organization    |Licensed                       |UserEmail                    |Remark|
+|----------------|-------------------------------|-----------------------------|-----------|
 
 * ` Feature added to consider all those users whome access granted bit they never logged-in even for the first time. Saving the license cost for such users as well.
 
@@ -129,7 +149,7 @@ E.g:
 
 ```
 
-#### v1.159.1
+#### v1.169.1
 
 New feature for email notification added, along with refinement/correction to the existing repeated record entries within the csv logs.
 
