@@ -130,6 +130,7 @@ E.g:
 |----------------|-------------------------------|-----------------------------|-----------|
 |myorganization|Stakeholder            |myemai@email.com          |_NeverLoggedIn|
 
+
 * ` Feature added to consider all those users whome access granted bit they never logged-in even for the first time. Saving the license cost for such users as well.
 
 #### v1.138.1
