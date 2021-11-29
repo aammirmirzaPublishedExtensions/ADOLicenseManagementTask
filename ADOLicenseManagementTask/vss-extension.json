@@ -23,13 +23,6 @@
   "galleryFlags": [
     "Private"
   ],
-  "badges": [
-        {
-            "href": "https://dev.azure.com/containerized1984/extensionLifeCycle/_apis/build/status/allExtensions?branchName=main",
-            "uri": "https://dev.azure.com/containerized1984/extensionLifeCycle/_apis/build/status/allExtensions?branchName=main",
-            "description": "Build status of extension"
-        }
-    ],
   "branding": {
     "color": "rgb(255,255,255)",
     "theme": "light"
