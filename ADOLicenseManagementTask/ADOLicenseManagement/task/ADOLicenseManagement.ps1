@@ -177,9 +177,9 @@ try {
     if ($UsersWhoDidntLoggedForMonths) {
       foreach ($User in $UsersWhoDidntLoggedForMonths) {
         if (!($usersExcludedFromLicenseChange.Contains($User.User.mailAddress))) {
-          if (!(Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress })) {
+          #if (!(Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress })) {
             $Response = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $User.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
-          }
+          #}
         }
         Start-Sleep -Seconds 7
         If ($Response.isSuccess) {
