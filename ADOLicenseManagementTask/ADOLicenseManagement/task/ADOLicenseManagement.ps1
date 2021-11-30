@@ -247,8 +247,8 @@ try {
   }
   if ($aEV -gt 0) {
     # Write-Error $errorValue.split(" | ")
-    Write-Host "##vso[task.complete result=Failed;]Invocation fail due to authentication issue or incorrect org name"
-    exit 1
+    Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail due to authentication issue or incorrect org name"
+    # exit 1
   }
   Get-Content -Path ActionedUsersLog_$randomNumber.csv -ErrorAction SilentlyContinue
   Write-Host "##[command]Log file 'ActionedUsersLog_$randomNumber.csv' has been created. Use copy file task and publish artifact task to get it packaged as build artifact"
