@@ -111,7 +111,7 @@ try {
       Write-Host "##[error]StatusDescription: Invalid Authentication, Check token used for $($Org) "$_.Exception.Response.Content.value__
       Write-Host "##[endgroup]"
 
-      Write-Host "##vso[task.complete result=Failed;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
+      Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
       $authExceptionValue += $aEV
     }
     if ($UsersWhoNeverLogged) {
