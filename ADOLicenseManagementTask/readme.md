@@ -36,7 +36,7 @@ Available task name after installation - 'ADO License Management'
 
 * Logs (csv) availble for artifact packaging as .CSV. Available output in pipeline artifact `(Limited feature for windows agent)`.
 
-* [New Feature] Send email **notofication toggle** added with SMTP configuration, to notify actioned users. Also csv log has random prefix added so that it should not append to existing 
+* [New Feature] Send email **notofication toggle** added with SMTP configuration, to notify actioned users. Also csv log has random prefix added so that it should not append to existing
 csv file (in case of self-hosted agent)
 
 
@@ -85,19 +85,27 @@ steps:
 
 ```
 
-## Azure DevOps License cost
+## Azure DevOps License cost _(as of 07 Jan 2021)_
 
 * Stakeholder - Free
 * Basic - First five users free, then $6 per user
 * Basic + Test Plans - $52 per user
 * Visual Studio Subscriber - $45 - $250 a month
 
+## Success story
+Please focus on highlighted rows of image, other rows may look blurry
+#### Before
+![Before](images/NovCost.png)
+
+#### After
+![After](images/DecCost.png)
+
 ## GIF for reference
 
  Placeholder
 
 
-#### Minimum required previlages for the token to perform the task
+## Required previlages for PAT
 
 * Members Entitlement Management (Read & Write)
 
@@ -129,7 +137,8 @@ E.g:
 |Organization    |Licensed                       |UserEmail                    |Remark|
 |----------------|-------------------------------|-----------------------------|-----------|
 |myorganization|Stakeholder            |myemai@email.com          |_NeverLoggedIn|
-
+|myorganization|Stakeholder            |excluded@email.com          |_Skipped|
+|myorganization|Error_changing_license            |orgadmin@email.com          |_OrgAdminOrPermissionIssue|
 
 * ` Feature added to consider all those users whome access granted bit they never logged-in even for the first time. Saving the license cost for such users as well.
 
@@ -148,6 +157,12 @@ E.g:
 
 New feature for email notification added, along with refinement/correction to the existing repeated record entries within the csv logs.
 
+#### v1.178.1
+Fixed script failure error
+Fixed log file generation issue
+Fixed skip logic for the Admins and exceptional users
+
+Note: Some cases pipeline status fails (Manual error state), still will generate the csv log with details of failure user IDs.
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)

@@ -53,7 +53,38 @@ function Get-UserUri {
   $UserUri = "$($OrganizationUri)/$($UserId)?api-version=5.1-preview.2"
   return $UserUri
 }
+################################################################
+## Signature
+$t = @"
+    Extension designed and managed"
 
+      ██████  ██    ██      █████   █████  ███    ███ ███    ███ ██ ██████
+      ██   ██  ██  ██      ██   ██ ██   ██ ████  ████ ████  ████ ██ ██   ██
+      ██████    ████       ███████ ███████ ██ ████ ██ ██ ████ ██ ██ ██████
+      ██   ██    ██        ██   ██ ██   ██ ██  ██  ██ ██  ██  ██ ██ ██   ██
+      ██████     ██        ██   ██ ██   ██ ██      ██ ██      ██ ██ ██   ██
+
+                                  AzDO Lcense Managemenet - Little effort
+                                  towards cost savings.
+                                  aammir.mirza@hotmail.com
+
+"@
+      for ($i=0;$i -lt $t.length;$i++) {
+      if ($i%2) {
+       $c = "red"
+      }
+      elseif ($i%5) {
+       $c = "yellow"
+      }
+      elseif ($i%7) {
+       $c = "green"
+      }
+      else {
+         $c = "white"
+      }
+      write-host $t[$i] -NoNewline -ForegroundColor $c
+      }
+################################################################
 $EncodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$AccessToken"))
 $Global:Header = @{Authorization = "Basic $encodedPat" }
 
@@ -210,7 +241,7 @@ try {
               UserEmail    = "$($User.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Skipped'
-              Remark     = "_Skipped"
+              Remark     = "_Excluded"
             }
             $result += $obj
             continue
