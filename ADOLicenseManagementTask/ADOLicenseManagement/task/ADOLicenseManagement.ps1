@@ -19,8 +19,8 @@ $t = @"
     | '_ \| || |  / _ \ / _` || '  \ | || '_|
     |_.__/ \_, | /_/ \_\\__,_||_|_|_||_||_|
            |__/
-               AzDO Lcense Managemenet - Little effort
-               towards cost savings.
+               AzDO License Managemenet - Little effort
+               towards PaaS cost savings.
                aammir.mirza@hotmail.com
 
 "@
