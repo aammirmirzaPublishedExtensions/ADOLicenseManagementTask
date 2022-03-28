@@ -9,6 +9,7 @@ param (
   $sentFrom,
   $adiitionalComment
 )
+$result = @()
 ######################################eMail notification added##############################################
 function sendEmailNotification {
   param (
@@ -111,7 +112,7 @@ try {
       Write-Host "##[error]StatusDescription: Invalid Authentication, Check token used for $($Org) "$_.Exception.Response.Content.value__
       Write-Host "##[endgroup]"
 
-      Write-Host "##vso[task.complete result=Failed;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
+      Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
       $authExceptionValue += $aEV
     }
     if ($UsersWhoNeverLogged) {
@@ -124,12 +125,13 @@ try {
         If ($ResponseNl.isSuccess) {
           # Write-Host ("{0} Access Level is updated" -F $User.User.mailAddress)
           Write-Host "##[section] $($UserNl.User.mailAddress) Access Level is downgraded as the user 'Never logged-in from a month'"
-          New-Object -TypeName PSCustomObject -Property @{
+          $obj = [PSCustomObject]@{
             UserEmail    = "$($UserNl.User.mailAddress)_NeverLogged"
             Organization = "$($Org)"
             Licensed     = 'Stakeholder'
             Remark     = '_NeverLoggedIn'
-          } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
+          }
+          $result += $obj
           # send email notofication to user
           if ($emailNotify.Contains("true")) {
             sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
@@ -140,12 +142,13 @@ try {
           # if ($User.User.mailAddress -in $usersExcludedFromLicenseChange) {
           if (($usersExcludedFromLicenseChange.Contains($UserNl.User.mailAddress)) -and $UserNl) {
             Write-Host "##[warning]Skipping license check for $($UserNl.User.mailAddress)"
-            New-Object -TypeName PSCustomObject -Property @{
+            $obj = [PSCustomObject]@{
               UserEmail    = "$($UserNl.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Skipped'
               Remark     = '_Excluded'
-            } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
+            }
+            $result += $obj
             continue
           }
           # if($User){
@@ -153,12 +156,13 @@ try {
           $message = "| An error occured while changing Access Level for User $($UserNl.User.mailAddress) in $($Org) organization."
           $errorValue += $message
           $countWarning += @(Write-Warning $message | Measure-Object).Count
-          New-Object -TypeName PSCustomObject -Property @{
+          $obj = [PSCustomObject]@{
             UserEmail    = "$($UserNl.User.mailAddress)"
             Organization = "$($Org)"
             Licensed     = 'Error_changing_license'
             Remark     = '_OrgAdminOrPermissionIssue'
-          } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
+          }
+          $result += $obj
           # Grouping of errors
           Write-Host "##[group]Output Variables for error handeling"
           Write-Host "##[error]Error message : $errorValue"
@@ -185,12 +189,13 @@ try {
         If ($Response.isSuccess) {
           # Write-Host ("{0} Access Level is updated" -F $User.User.mailAddress)
           Write-Host "##[section] $($User.User.mailAddress) Access Level is downgraded, as the user in-active from ,$($NumberOfMonths) months"
-          New-Object -TypeName PSCustomObject -Property @{
+          $obj = [PSCustomObject]@{
             UserEmail    = "$($User.User.mailAddress)"
             Organization = "$($Org)"
             Licensed     = 'Stakeholder'
             Remark     = "_inActive_$($NumberOfMonths)_months"
-          } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
+          }
+          $result += $obj
           # send email notofication to user
           if ($emailNotify.Contains("true")) {
             sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
@@ -201,12 +206,13 @@ try {
           # if ($User.User.mailAddress -in $usersExcludedFromLicenseChange) {
           if ($usersExcludedFromLicenseChange.Contains($User.User.mailAddress)) {
             Write-Host "##[warning]Skipping license check for $($User.User.mailAddress)"
-            New-Object -TypeName PSCustomObject -Property @{
+            $obj = [PSCustomObject]@{
               UserEmail    = "$($User.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Skipped'
               Remark     = "_Skipped"
-            } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
+            }
+            $result += $obj
             continue
           }
           elseif (Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress }) {
@@ -218,12 +224,13 @@ try {
             $message = "| An error occured while changing Access Level for User $($User.User.mailAddress) in $($Org) organization."
             $errorValue += $message
             $countWarning += @(Write-Warning $message | Measure-Object).Count
-            New-Object -TypeName PSCustomObject -Property @{
+            $obj = [PSCustomObject]@{
               UserEmail    = "$($User.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Error_changing_license'
               Remark     = '_OrgAdminOrPermissionIssue'
-            } | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
+            }
+            $result += $obj
             # Grouping of errors
             Write-Host "##[group]Output Variables for error handeling"
             Write-Host "##[error]Error message : $errorValue"
@@ -238,17 +245,18 @@ try {
     }
     else { Write-Host "##[warning] Nothing found - No license to optimize in $($Org) for users not logged since $($FromDate)" }
     Write-Host "##[command]Creating logs..."
+    $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation #-Append
   }
   # Pipeline break in case of exception
   if ($countWarning -gt 0) {
     # Write-Error $errorValue.split(" | ")
     Write-Host "##vso[task.complete result=Failed;]$errorValue"
-    exit 1
+    # exit 1
   }
   if ($aEV -gt 0) {
     # Write-Error $errorValue.split(" | ")
-    Write-Host "##vso[task.complete result=Failed;]Invocation fail due to authentication issue or incorrect org name"
-    exit 1
+    Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail due to authentication issue or incorrect org name"
+    # exit 1
   }
   Get-Content -Path ActionedUsersLog_$randomNumber.csv -ErrorAction SilentlyContinue
   Write-Host "##[command]Log file 'ActionedUsersLog_$randomNumber.csv' has been created. Use copy file task and publish artifact task to get it packaged as build artifact"
