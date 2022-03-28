@@ -90,7 +90,7 @@ try {
     Write-Host "##[command]Organization Name : $($Org)"
     ('=' * 75)
     try {
-      $AllOrgUsers = Invoke-RestMethod -Uri $Uri -Headers $Global:Header -Method 'GET' -ContentType "application/json"
+      $AllOrgUsers = Invoke-RestMethod -Uri $Uri -Headers $Global:Header -Method 'GET' -ContentType "application/json" -ErrorAction SilentlyContinue
       #Access level of Basic and Basic + Test Plan
       $ReqAccesslevelUsers = $AllOrgUsers.value | Where-Object { $_.accessLevel.licenseDisplayName -match 'Basic' }
       if (!$ReqAccesslevelUsers) {
