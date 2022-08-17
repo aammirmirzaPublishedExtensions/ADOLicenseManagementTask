@@ -47,7 +47,7 @@ function sendEmailNotification {
     Credential                 = $credential
     From                       = $sentFrom
     To                         = $to
-    Subject                    = 'Azure DevOps license downgraded'
+    Subject                    = "Azure DevOps license downgraded"
     Body                       = "Your license has been downgraded to STAKEHOLDER. $($adiitionalComment)"
     DeliveryNotificationOption = 'OnFailure'#, 'OnSuccess'
   }
@@ -73,13 +73,13 @@ $EncodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetB
 $Global:Header = @{Authorization = "Basic $encodedPat" }
 
 #Getting Date from $NumberOfMonths
-$FromDate = Get-Date (Get-Date).AddMonths(-$NumberOfMonths) -Format 'yyyy-MM-dd'
+$FromDate = Get-date (Get-Date).AddMonths(-$NumberOfMonths) -Format 'yyyy-MM-dd'
 
 #Getting Date from 3 Months ago to check the added date of the user
-$FromDateThreeMonthsAgo = Get-Date (Get-Date).AddMonths(-2) -Format 'yyyy-MM-dd'
+$FromDateThreeMonthsAgo = Get-date (Get-Date).AddMonths(-2) -Format 'yyyy-MM-dd'
 
 # Condition for user to whom access granted but they never logged in to AzDO
-$NeverDate = Get-Date (Get-Date).AddMonths(-500) -Format 'yyyy-MM-dd'
+$NeverDate = Get-date (Get-Date).AddMonths(-500) -Format 'yyyy-MM-dd'
 
 $Body = '[
   {
@@ -93,35 +93,19 @@ $Body = '[
   }]'
 
 try {
-  # if no organization provided then get all organizations
-  if ($Organizations -eq @()) {
-    $AzureDevOpsAuthenicationHeader = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($AccessToken)")) }
-
-    # Getting list of all organization within the AzDO
-    $uProfile = Invoke-RestMethod -Uri 'https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=6.0' -Method get -Headers $AzureDevOpsAuthenicationHeader
-    $uProfile.publicAlias
-
-    $allOrganization = Invoke-RestMethod -Uri "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$($uprofile.publicAlias)&api-version=6.0" -Method get -Headers $AzureDevOpsAuthenicationHeader
-    $Orges = $allOrganization.value.accountName
-    Write-Host "##[command]Fetching organizations based on credentials of the PAT Token"
-    Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
-  }
-  else {
-    <# Action when organization is provided manually#>
-    $Orges = [string[]]($Organizations -split ',').replace(' ' , '')
-    Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
-  }
   $aEV = 0
+  $Orges = [string[]]($Organizations -split ',').replace(' ' , '')
+  Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
   $randomNumber = (Get-Random -Maximum 9999999)
   foreach ($Org in $Orges) {
     ('=' * 75)
-    if ($Organizations -ne @()) {$Org = $Org.replace("'" , '')}
+    $Org = $Org.replace("'" , "")
     $OrgUri = "https://vsaex.dev.azure.com/$($Org)/_apis/userentitlements"
     $Uri = "$($OrgUri)?top=10000&skip=0&api-version=5.1-preview.1"
     Write-Host "##[command]Organization Name : $($Org)"
     ('=' * 75)
     try {
-      $AllOrgUsers = Invoke-RestMethod -Uri $Uri -Headers $Global:Header -Method 'GET' -ContentType 'application/json'
+      $AllOrgUsers = Invoke-RestMethod -Uri $Uri -Headers $Global:Header -Method 'GET' -ContentType "application/json"
       #Access level of Basic and Basic + Test Plan
       $ReqAccesslevelUsers = $AllOrgUsers.value | Where-Object { $_.accessLevel.licenseDisplayName -match 'Basic' }
       if (!$ReqAccesslevelUsers) {
@@ -138,10 +122,10 @@ try {
     catch {
       # Grouping of errors
       Write-Host "##[group] ERROR : Invalid invocation for $($Org), Check access, or Org name"
-      Write-Host '##[error]Invocation fail for: ' $Org
-      Write-Host '##[error]StatusCode: 401 ' $_.Exception.Response.StatusCode.value__
+      Write-Host "##[error]Invocation fail for: " $Org
+      Write-Host "##[error]StatusCode: 401 " $_.Exception.Response.StatusCode.value__
       Write-Host "##[error]StatusDescription: Invalid Authentication, Check token used for $($Org) "$_.Exception.Response.Content.value__
-      Write-Host '##[endgroup]'
+      Write-Host "##[endgroup]"
 
       Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
       $authExceptionValue += $aEV
@@ -160,11 +144,11 @@ try {
             UserEmail    = "$($UserNl.User.mailAddress)_NeverLogged"
             Organization = "$($Org)"
             Licensed     = 'Stakeholder'
-            Remark       = '_NeverLoggedIn'
+            Remark     = '_NeverLoggedIn'
           }
           $result += $obj
           # send email notofication to user
-          if ($emailNotify.Contains('true')) {
+          if ($emailNotify.Contains("true")) {
             sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
           }
         }
@@ -177,7 +161,7 @@ try {
               UserEmail    = "$($UserNl.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Skipped'
-              Remark       = '_Excluded'
+              Remark     = '_Excluded'
             }
             $result += $obj
             continue
@@ -191,14 +175,14 @@ try {
             UserEmail    = "$($UserNl.User.mailAddress)"
             Organization = "$($Org)"
             Licensed     = 'Error_changing_license'
-            Remark       = '_OrgAdminOrPermissionIssue'
+            Remark     = '_OrgAdminOrPermissionIssue'
           }
           $result += $obj
           # Grouping of errors
-          Write-Host '##[group]Output Variables for error handeling'
+          Write-Host "##[group]Output Variables for error handeling"
           Write-Host "##[error]Error message : $errorValue"
           Write-Host "##[error]Error counts : $countWarning"
-          Write-Host '##[endgroup]'
+          Write-Host "##[endgroup]"
           Write-Output("##vso[task.setvariable variable=errorValue;isOutput=true;]$errorValue")
           Write-Output("##vso[task.setvariable variable=countError;isOutput=true;]$countWarning")
           Write-Host "##vbso[task.logissue type=error;]An error occured while changing Access Level for User $($User.User.mailAddress) in $($Org) organization."
@@ -213,7 +197,7 @@ try {
       foreach ($User in $UsersWhoDidntLoggedForMonths) {
         if (!($usersExcludedFromLicenseChange.Contains($User.User.mailAddress))) {
           #if (!(Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress })) {
-          $Response = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $User.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
+            $Response = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $User.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
           #}
         }
         Start-Sleep -Seconds 7
@@ -224,11 +208,11 @@ try {
             UserEmail    = "$($User.User.mailAddress)"
             Organization = "$($Org)"
             Licensed     = 'Stakeholder'
-            Remark       = "_inActive_$($NumberOfMonths)_months"
+            Remark     = "_inActive_$($NumberOfMonths)_months"
           }
           $result += $obj
           # send email notofication to user
-          if ($emailNotify.Contains('true')) {
+          if ($emailNotify.Contains("true")) {
             sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
           }
         }
@@ -241,7 +225,7 @@ try {
               UserEmail    = "$($User.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Skipped'
-              Remark       = '_Excluded'
+              Remark     = "_Excluded"
             }
             $result += $obj
             continue
@@ -259,14 +243,14 @@ try {
               UserEmail    = "$($User.User.mailAddress)"
               Organization = "$($Org)"
               Licensed     = 'Error_changing_license'
-              Remark       = '_OrgAdminOrPermissionIssue'
+              Remark     = '_OrgAdminOrPermissionIssue'
             }
             $result += $obj
             # Grouping of errors
-            Write-Host '##[group]Output Variables for error handeling'
+            Write-Host "##[group]Output Variables for error handeling"
             Write-Host "##[error]Error message : $errorValue"
             Write-Host "##[error]Error counts : $countWarning"
-            Write-Host '##[endgroup]'
+            Write-Host "##[endgroup]"
             Write-Output("##vso[task.setvariable variable=errorValue;isOutput=true;]$errorValue")
             Write-Output("##vso[task.setvariable variable=countError;isOutput=true;]$countWarning")
             Write-Host "##vbso[task.logissue type=error;]An error occured while changing Access Level for User $($User.User.mailAddress) in $($Org) organization."
@@ -275,7 +259,7 @@ try {
       }
     }
     else { Write-Host "##[warning] Nothing found - No license to optimize in $($Org) for users not logged since $($FromDate)" }
-    Write-Host '##[command]Creating logs...'
+    Write-Host "##[command]Creating logs..."
     $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation #-Append
   }
   # Pipeline break in case of exception
@@ -286,7 +270,7 @@ try {
   }
   if ($aEV -gt 0) {
     # Write-Error $errorValue.split(" | ")
-    Write-Host '##vso[task.complete result=SucceededWithIssues;]Invocation fail due to authentication issue or incorrect org name'
+    Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail due to authentication issue or incorrect org name"
     # exit 1
   }
   Get-Content -Path ActionedUsersLog_$randomNumber.csv -ErrorAction SilentlyContinue
