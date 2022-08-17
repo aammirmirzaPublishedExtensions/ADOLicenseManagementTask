@@ -69,6 +69,18 @@ function Get-UserUri {
   $UserUri = "$($OrganizationUri)/$($UserId)?api-version=5.1-preview.2"
   return $UserUri
 }
+
+function License-Change {
+  param (
+      $licenseName,
+      $emailAddress,
+      $parOrganization
+  )
+  # The user needs to be defined by the UserID.
+  #If you do not now the ID, you can grap it with the following cmdlet if you define the emailaddres
+  az devops user update --license-type $licenseName --user $emailAddress --org "https://dev.azure.com/$($parOrganization)"
+}
+
 $EncodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$AccessToken"))
 $Global:Header = @{Authorization = "Basic $encodedPat" }
 
@@ -227,7 +239,7 @@ try {
               Licensed     = 'Skipped'
               Remark     = "_Excluded"
             }
-            $result += $obj
+            $result = $obj
             continue
           }
           elseif (Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress }) {
@@ -245,7 +257,7 @@ try {
               Licensed     = 'Error_changing_license'
               Remark     = '_OrgAdminOrPermissionIssue'
             }
-            $result += $obj
+            $result = $obj
             # Grouping of errors
             Write-Host "##[group]Output Variables for error handeling"
             Write-Host "##[error]Error message : $errorValue"
@@ -257,10 +269,9 @@ try {
           }
         }
       }
+      $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
     }
     else { Write-Host "##[warning] Nothing found - No license to optimize in $($Org) for users not logged since $($FromDate)" }
-    Write-Host "##[command]Creating logs..."
-    $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation #-Append
   }
   # Pipeline break in case of exception
   if ($countWarning -gt 0) {
