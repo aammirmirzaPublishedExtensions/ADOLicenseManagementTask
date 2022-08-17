@@ -109,7 +109,7 @@ try {
   $Orges = [string[]]($Organizations -split ',').replace(' ' , '')
   Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
   $randomNumber = (Get-Random -Maximum 9999999)
-  Create-item -Path "ActionedUsersLog_$($randomNumber).csv" -Force
+  New-item -Path "ActionedUsersLog_$($randomNumber).csv" -Force
   foreach ($Org in $Orges) {
     ('=' * 75)
     $Org = $Org.replace("'" , "")
