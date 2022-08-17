@@ -103,6 +103,8 @@ try {
 
     $allOrganization = Invoke-RestMethod -Uri "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$($uprofile.publicAlias)&api-version=6.0" -Method get -Headers $AzureDevOpsAuthenicationHeader
     $Orges = $allOrganization.value.accountName
+    Write-Host "##[command]Fetching organizations based on credentials of the PAT Token"
+    Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
   }
   else {
     <# Action when organization is provided manually#>
@@ -113,7 +115,7 @@ try {
   $randomNumber = (Get-Random -Maximum 9999999)
   foreach ($Org in $Orges) {
     ('=' * 75)
-    $Org = $Org.replace("'" , '')
+    if ($Organizations -ne @()) {$Org = $Org.replace("'" , '')}
     $OrgUri = "https://vsaex.dev.azure.com/$($Org)/_apis/userentitlements"
     $Uri = "$($OrgUri)?top=10000&skip=0&api-version=5.1-preview.1"
     Write-Host "##[command]Organization Name : $($Org)"
