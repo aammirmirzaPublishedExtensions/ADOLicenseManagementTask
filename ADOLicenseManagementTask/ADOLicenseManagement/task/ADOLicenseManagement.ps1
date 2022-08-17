@@ -109,6 +109,7 @@ try {
   $Orges = [string[]]($Organizations -split ',').replace(' ' , '')
   Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
   $randomNumber = (Get-Random -Maximum 9999999)
+  Create-item -Path "ActionedUsersLog_$($randomNumber).csv" -Force
   foreach ($Org in $Orges) {
     ('=' * 75)
     $Org = $Org.replace("'" , "")
@@ -239,7 +240,7 @@ try {
               Licensed     = 'Skipped'
               Remark     = "_Excluded"
             }
-            $result = $obj
+            $result += $obj
             continue
           }
           elseif (Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress }) {
@@ -257,7 +258,7 @@ try {
               Licensed     = 'Error_changing_license'
               Remark     = '_OrgAdminOrPermissionIssue'
             }
-            $result = $obj
+            $result += $obj
             # Grouping of errors
             Write-Host "##[group]Output Variables for error handeling"
             Write-Host "##[error]Error message : $errorValue"
@@ -269,9 +270,10 @@ try {
           }
         }
       }
-      $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation -Append
     }
     else { Write-Host "##[warning] Nothing found - No license to optimize in $($Org) for users not logged since $($FromDate)" }
+    Write-Host "##[command]Creating logs..."
+    $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation #-Append
   }
   # Pipeline break in case of exception
   if ($countWarning -gt 0) {
