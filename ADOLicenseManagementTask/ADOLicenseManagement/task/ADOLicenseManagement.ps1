@@ -128,7 +128,7 @@ try {
   New-Item -Path "ActionedUsersLog_$($randomNumber).csv" -Force
   foreach ($Org in $Orges) {
     ('=' * 75)
-    $Org = $Org.replace(' ' , '').replace("'" , '').replace('"' , '')
+    $Org = $Org.replace("'" , '')
     $OrgUri = "https://vsaex.dev.azure.com/$($Org)/_apis/userentitlements"
     $Uri = "$($OrgUri)?top=10000&skip=0&api-version=5.1-preview.1"
     Write-Host "##[command]Organization Name : $($Org)"
