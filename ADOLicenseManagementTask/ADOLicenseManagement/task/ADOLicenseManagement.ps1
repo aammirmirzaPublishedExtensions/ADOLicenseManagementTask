@@ -291,12 +291,12 @@ try {
     Write-Host '##[command]Creating logs...'
     $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation #-Append
   }
-  # Pipeline break in case of exception
-  if ($countWarning -gt 0) {
-    # Write-Error $errorValue.split(" | ")
-    Write-Host "##vso[task.complete result=Failed;]$errorValue"
-    # exit 1
-  }
+  # # Pipeline break in case of exception
+  # if ($countWarning -gt 0) {
+  #   # Write-Error $errorValue.split(" | ")
+  #   Write-Host "##vso[task.complete result=Failed;]$errorValue"
+  #   # exit 1
+  # }
   if ($aEV -gt 0) {
     # Write-Error $errorValue.split(" | ")
     Write-Host '##vso[task.complete result=SucceededWithIssues;]Invocation fail due to authentication issue or incorrect org name'
