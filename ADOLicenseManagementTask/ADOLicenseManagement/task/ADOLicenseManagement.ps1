@@ -136,7 +136,7 @@ try {
     try {
       $AllOrgUsers = Invoke-RestMethod -Uri $Uri -Headers $Global:Header -Method 'GET' -ContentType 'application/json'
       #Access level of Basic and Basic + Test Plan
-      $ReqAccesslevelUsers = $AllOrgUsers.value | Where-Object { ($_.accessLevel.licenseDisplayName -match 'Basic') -or ($_.accessLevel.licenseDisplayName -match 'Basic + Test Plans') -or ($_.accessLevel.licenseDisplayName -match 'Visual Studio Subscriber') }
+      $ReqAccesslevelUsers = $AllOrgUsers.value | Where-Object { ($_.accessLevel.licenseDisplayName -match 'Basic') -or ($_.accessLevel.licenseDisplayName -match 'Basic + Test Plans') }
       if (!$ReqAccesslevelUsers) {
         throw ( $_.Exception.Message)
       }
@@ -157,6 +157,7 @@ try {
       Write-Host '##[endgroup]'
       # Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
       $authExceptionValue += $aEV
+      continue
     }
     if ($UsersWhoNeverLogged) {
       # dedicated for Users those who have never loggedin
