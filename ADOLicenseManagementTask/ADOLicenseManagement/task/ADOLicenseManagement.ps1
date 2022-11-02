@@ -157,6 +157,7 @@ try {
       Write-Host '##[endgroup]'
       # Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
       $authExceptionValue += $aEV
+      continue
     }
     if ($UsersWhoNeverLogged) {
       # dedicated for Users those who have never loggedin
