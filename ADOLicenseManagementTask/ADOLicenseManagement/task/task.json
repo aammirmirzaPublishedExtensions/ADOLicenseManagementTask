@@ -40,7 +40,7 @@
             "name": "Organizations",
             "type": "multiLine",
             "label": "Organizations",
-            "required": true,
+            "required": false,
             "defaultValue": "",
             "properties": {
                 "resizable": "true",
