@@ -26,8 +26,6 @@ $t = @"
 "@
 Write-Host "$($t)"
 ################################################################
-Install-Module -Name VSteam -Force
-Import-Module -Name VSteam
 ######################################eMail notification added##############################################
 function sendEmailNotification {
   param (
@@ -88,6 +86,7 @@ $Global:Header = @{Authorization = "Basic $encodedPat" }
 
 # Getting list of all organization within the AzDO
 $uProfile = Invoke-RestMethod -Uri 'https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=6.0' -Method get -Headers $Global:Header
+$uProfile.publicAlias
 
 #Getting Date from $NumberOfMonths
 $FromDate = Get-Date (Get-Date).AddMonths(-$NumberOfMonths) -Format 'yyyy-MM-dd'
@@ -98,16 +97,26 @@ $FromDateThreeMonthsAgo = Get-Date (Get-Date).AddMonths(-2) -Format 'yyyy-MM-dd'
 # Condition for user to whom access granted but they never logged in to AzDO
 $NeverDate = Get-Date (Get-Date).AddMonths(-500) -Format 'yyyy-MM-dd'
 
+$Body = '[
+  {
+    "from": "",
+    "op": "replace",
+    "path": "/accessLevel",
+    "value": {
+      "accountLicenseType":"stakeholder",
+      "licensingSource": "account"
+    }
+  }]'
+
 try {
   $aEV = 0
-  if (!$Organizations) {
+  if ($Organizations) {
     $Orges = [string[]]($Organizations -split ',').replace(' ' , '')
     Write-Host "##[section] Checking license for total $($Orges.count) Organizations"
   }
   else {
     $Orges = Invoke-RestMethod -Uri "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$($uprofile.publicAlias)&api-version=6.0" -Method get -Headers $Global:Header
     $Orges = $Orges.value.accountName
-    $Orges
 
     Write-Host '---------------------------------------------'
     Write-Host '##[command]Summary'
@@ -119,7 +128,7 @@ try {
   New-Item -Path "ActionedUsersLog_$($randomNumber).csv" -Force
   foreach ($Org in $Orges) {
     ('=' * 75)
-    $Org = $Org.replace("'" , '')
+    $Org = $Org.replace(' ' , '').replace("'" , '').replace('"' , '')
     $OrgUri = "https://vsaex.dev.azure.com/$($Org)/_apis/userentitlements"
     $Uri = "$($OrgUri)?top=10000&skip=0&api-version=5.1-preview.1"
     Write-Host "##[command]Organization Name : $($Org)"
@@ -154,13 +163,12 @@ try {
       # dedicated for Users those who have never loggedin
       foreach ($UserNl in $UsersWhoNeverLogged) {
         if ((!($usersExcludedFromLicenseChange.Contains($UserNl.User.mailAddress))) -and ($UserNl)) {
-          # $ResponseNl = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $UserNl.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
-          $ResponseNl = License-Change -licenseName 'StakeHolder' -emailAddress "$($UserNl.User.mailAddress)"
+          $ResponseNl = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $UserNl.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
         }
-        Start-Sleep -Seconds 5
-        If ($ResponseNl) {
+        Start-Sleep -Seconds 7
+        If ($ResponseNl.isSuccess) {
           # Write-Host ("{0} Access Level is updated" -F $User.User.mailAddress)
-          Write-Host "##[section] $($UserNl.User.mailAddress) Access Level is downgraded as the user 'NEVER LOGGED-IN USER'"
+          Write-Host "##[section] $($UserNl.User.mailAddress) Access Level is downgraded as the user 'Never logged-in from a month'"
           $obj = [PSCustomObject]@{
             UserEmail    = "$($UserNl.User.mailAddress)_NeverLogged"
             Organization = "$($Org)"
@@ -173,7 +181,7 @@ try {
             sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
           }
         }
-        elseif (!$ResponseNl) {
+        elseif (!$ResponseNl.isSuccess) {
           # Need to skip this because of the owner of the ADO Org.
           # if ($User.User.mailAddress -in $usersExcludedFromLicenseChange) {
           if (($usersExcludedFromLicenseChange.Contains($UserNl.User.mailAddress)) -and $UserNl) {
@@ -188,7 +196,7 @@ try {
             continue
           }
           # if($User){
-          $errorValue += '| ERROR: Page not found. Operation returned a 404 status code.'
+          $errorValue += "| $($ResponseNl.operationResults.errors.value)"
           $message = "| An error occured while changing Access Level for User $($UserNl.User.mailAddress) in $($Org) organization."
           $errorValue += $message
           $countWarning += @(Write-Warning $message | Measure-Object).Count
@@ -211,21 +219,20 @@ try {
         }
       }
     }
-    else { Write-Host "##[warning] Nothing found, No license to optimize in $($Org) for 'NEVER LOGGED-IN USER'" }
+    else { Write-Host "##[warning] Nothing found, No license to optimize in $($Org) for 'Never logged users'" }
 
     # dedicated for users those who have not logged in from x months
     if ($UsersWhoDidntLoggedForMonths) {
       foreach ($User in $UsersWhoDidntLoggedForMonths) {
         if (!($usersExcludedFromLicenseChange.Contains($User.User.mailAddress))) {
           #if (!(Import-Csv .\ActionedUsersLog_$randomNumber.csv | Where-Object { $_.UserEmail -match $User.User.mailAddress })) {
-          # $Response = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $User.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
-          $Response = License-Change -licenseName 'StakeHolder' -emailAddress "$($User.User.mailAddress)"
+          $Response = Invoke-RestMethod -Uri (Get-UserUri -OrganizationUri $OrgUri -UserId $User.Id) -Headers $Global:Header -Method 'PATCH' -Body $Body -ContentType 'application/json-patch+json'
           #}
         }
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 7
         If ($Response.isSuccess) {
           # Write-Host ("{0} Access Level is updated" -F $User.User.mailAddress)
-          Write-Host "##[section] $($User.User.mailAddress) Access Level is downgraded, as the user NOT-ACTIVE from ,$($NumberOfMonths) months"
+          Write-Host "##[section] $($User.User.mailAddress) Access Level is downgraded, as the user in-active from ,$($NumberOfMonths) months"
           $obj = [PSCustomObject]@{
             UserEmail    = "$($User.User.mailAddress)"
             Organization = "$($Org)"
@@ -257,7 +264,7 @@ try {
             continue
           }
           else {
-            $errorValue += ' | ERROR: Page not found. Operation returned a 404 status code.'
+            $errorValue += "| $($Response.operationResults.errors.value)"
             $message = "| An error occured while changing Access Level for User $($User.User.mailAddress) in $($Org) organization."
             $errorValue += $message
             $countWarning += @(Write-Warning $message | Measure-Object).Count
@@ -282,9 +289,7 @@ try {
     }
     else { Write-Host "##[warning] Nothing found - No license to optimize in $($Org) for users not logged since $($FromDate)" }
     Write-Host '##[command]Creating logs...'
-    if ($result) {
-      $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation #-Append
-    }
+    $result | Export-Csv -Path ActionedUsersLog_$randomNumber.csv -NoTypeInformation #-Append
   }
   # Pipeline break in case of exception
   if ($countWarning -gt 0) {
