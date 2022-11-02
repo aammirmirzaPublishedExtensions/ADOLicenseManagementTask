@@ -1,4 +1,5 @@
-#Requires -Modules VSTEam
+Install-Module -Name VSteam -Force
+Import-Module -Name VSteam
 param (
   $AccessToken,
   $NumberOfMonths,
