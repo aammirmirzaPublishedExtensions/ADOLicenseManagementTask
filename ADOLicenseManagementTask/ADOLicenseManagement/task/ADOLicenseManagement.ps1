@@ -1,5 +1,3 @@
-Install-Module -Name VSteam -Force
-Import-Module -Name VSteam
 param (
   $AccessToken,
   $NumberOfMonths,
@@ -28,6 +26,8 @@ $t = @"
 "@
 Write-Host "$($t)"
 ################################################################
+Install-Module -Name VSteam -Force
+Import-Module -Name VSteam
 ######################################eMail notification added##############################################
 function sendEmailNotification {
   param (
