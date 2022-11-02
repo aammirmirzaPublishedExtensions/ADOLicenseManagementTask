@@ -136,7 +136,7 @@ try {
     try {
       $AllOrgUsers = Invoke-RestMethod -Uri $Uri -Headers $Global:Header -Method 'GET' -ContentType 'application/json'
       #Access level of Basic and Basic + Test Plan
-      $ReqAccesslevelUsers = $AllOrgUsers.value | Where-Object { $_.accessLevel.licenseDisplayName -match 'Basic' }
+      $ReqAccesslevelUsers = $AllOrgUsers.value | Where-Object { ($_.accessLevel.licenseDisplayName -match 'Basic') -or ($_.accessLevel.licenseDisplayName -match 'Basic + Test Plans') -or ($_.accessLevel.licenseDisplayName -match 'Visual Studio Subscriber') }
       if (!$ReqAccesslevelUsers) {
         throw ( $_.Exception.Message)
       }
@@ -155,8 +155,7 @@ try {
       Write-Host '##[error]StatusCode: 401 ' $_.Exception.Response.StatusCode.value__
       Write-Host "##[error]StatusDescription: Invalid Authentication, Check token used for $($Org) "$_.Exception.Response.Content.value__
       Write-Host '##[endgroup]'
-
-      Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
+      # Write-Host "##vso[task.complete result=SucceededWithIssues;]Invocation fail for: $Org (Authentication issue or incorrect org name)"
       $authExceptionValue += $aEV
     }
     if ($UsersWhoNeverLogged) {
