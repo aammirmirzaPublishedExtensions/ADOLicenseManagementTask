@@ -86,6 +86,7 @@ $status = Import-csv ./"AzDOLicenses_$($runnedDate).csv"
 $Stakeholder = (($status.where{$_.license -eq 'Stakeholder'}).Count)
 $Basic = (($status.where{$_.license -eq 'Basic'}).Count)
 $BasicTest = (($status.where{$_.license -eq 'Basic + Test'}).Count)
+$vs = (($status.where{$_.license -match 'Visual Studio'}).Count)
 
 $pie = @"
 ``````mermaid
@@ -94,6 +95,7 @@ pie
     "Stakeholder" : "$($Stakeholder)"
     "Basic" : "$($Basic)"
     "Basic + Test" : "$($BasicTest)"
+    "Visual Studio" : "$($vs)"
 ```````n
 "@
 $pie
