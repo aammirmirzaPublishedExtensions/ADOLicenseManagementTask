@@ -15,6 +15,7 @@ trigger:
     - ADOLicenseManagementTask
     - AkamaiFastPurgeTask # file paths which must match to trigger a build, cannot be a variable
     - AzureSecurityCenter
+    - AzureDevOpsLicensesTask
 
 variables:
   # Below 3 vars declared in the pipeline UI
