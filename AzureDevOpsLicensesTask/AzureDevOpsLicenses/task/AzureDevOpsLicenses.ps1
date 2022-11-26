@@ -82,6 +82,9 @@ $runnedDate = (get-date -format "yyyyMMdd")
 Write-Host '##[command]Creating logs...'
 $result | Export-Csv -Path "AzDOLicenses_$($runnedDate).csv" -NoTypeInformation -Append
 Write-Host "##[command]Log file 'AzDOLicenses_$runnedDate.csv' has been created. Use copy file task and publish artifact task to get it packaged as build artifact"
+$status = Import-csv ./"AzDOLicenses_$($runnedDate).csv"
+$a | Group-Object License
+$status.where{$_.license -eq 'Stakeholder'}
 $t = @"
 ``````mermaid
 pie
