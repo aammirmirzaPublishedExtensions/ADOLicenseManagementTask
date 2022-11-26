@@ -97,9 +97,14 @@ pie
 ```````n
 "@
 $pie
+
+New-item "status_$runnedDate.md"
+set-content -path "status_$runnedDate.md" -value $pie
+
 try {
   if (($env:Agent_OS) -eq 'Windows_NT') {
     Copy-Item AzDOLicenses_$runnedDate.csv -Destination "$($ENV:Build_ArtifactStagingDirectory)\AzDOLicenses_$runnedDate.csv" -Recurse -ErrorAction SilentlyContinue
+    Copy-Item AzDOLicenses_$runnedDate.csv -Destination "$($ENV:Build_ArtifactStagingDirectory)\status_$runnedDate.csv" -Recurse -ErrorAction SilentlyContinue
   }
 }
 catch {
