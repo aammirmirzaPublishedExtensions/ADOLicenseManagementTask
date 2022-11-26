@@ -1,0 +1,83 @@
+{
+  "manifestVersion": 1,
+  "id": "CP-ADOLicenseManagement",
+  "version": "1.0.20",
+  "name": "Azure DevOps License Management Tasks",
+  "publisher": "AammirMirza",
+  "description": "Task to manage un-used AzDO user licenses (approach to reduce cost)",
+  "categories": [
+    "Azure Pipelines"
+  ],
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services.Cloud"
+    }
+  ],
+  "tags": [
+    "Release",
+    "Build",
+    "Azure DevOps",
+    "Cost Optimization",
+    "Azure User Management"
+  ],
+  "galleryFlags": [
+    "Private"
+  ],
+  "branding": {
+    "color": "rgb(255,255,255)",
+    "theme": "light"
+  },
+  "icons": {
+    "default": "images/icon.png"
+  },
+  "links": {
+    "getstarted": {
+      "uri": "https://docs.microsoft.com/en-us/azure/devops/organizations/billing/buy-basic-access-add-users?view=azure-devops"
+    },
+    "support": {
+      "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask/issues"
+    },
+    "source": {
+      "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask"
+    },
+    "issues": {
+      "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask/issues"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/aammirmirzaPublishedExtensions/ADOLicenseManagementTask"
+  },
+  "content": {
+    "details": {
+      "path": "readme.md"
+    },
+    "license": {
+      "path": "license.md"
+    },
+    "privacypolicy": {
+      "path": "privacy.md"
+    }
+  },
+  "files": [
+    {
+      "path": "ADOLicenseManagement"
+    },
+    {
+      "path": "images",
+      "addressable": true
+    }
+  ],
+  "contributions": [
+    {
+      "id": "ADOLicenseManagement-Task",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "ADOLicenseManagement"
+      }
+    }
+  ]
+}
