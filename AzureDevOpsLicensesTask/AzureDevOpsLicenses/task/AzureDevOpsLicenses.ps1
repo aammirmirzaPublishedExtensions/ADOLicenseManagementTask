@@ -82,6 +82,15 @@ $runnedDate = (get-date -format "yyyyMMdd")
 Write-Host '##[command]Creating logs...'
 $result | Export-Csv -Path "AzDOLicenses_$($runnedDate).csv" -NoTypeInformation -Append
 Write-Host "##[command]Log file 'AzDOLicenses_$runnedDate.csv' has been created. Use copy file task and publish artifact task to get it packaged as build artifact"
+$t = @"
+``````mermaid
+pie
+    title Pie Chart
+    "Stakeholder" : "$($Stakeholder)"
+    "Basic" : "$($Basic)"
+    "Basic + Test" : "$($BasicTest)"
+```````n
+"@
 try {
   if (($env:Agent_OS) -eq 'Windows_NT') {
     Copy-Item AzDOLicenses_$runnedDate.csv -Destination "$($ENV:Build_ArtifactStagingDirectory)\AzDOLicenses_$runnedDate.csv" -Recurse -ErrorAction SilentlyContinue
