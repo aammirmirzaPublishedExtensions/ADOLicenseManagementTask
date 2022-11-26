@@ -118,7 +118,8 @@ emailto: aammir.mirza@hotmail.com
 Produce a flow chart:
 ```mermaid
 graph LR
-A[Fetch License details] -- Need Optimizaton --> B{Use ADO Lic Mgmt task}
-B -- Yes --> C(Un-used licenses 'stakeholder')
-B -- No --> D(Analyze report)
+A[Fetch License details] --> B{Need Optimizaton}
+B -- Yes --> C(License Optimization Task)
+B -- No --> D(Analyze/Publish report)
+C --> E(ADO License Task)
 ```
