@@ -79,13 +79,13 @@ steps:
 -  task:  AammirMirza.CP-AzureDevOpsLicensespublic.AzureDevOpsLicenses-Task.AzureDevOpsLicenses@1
 	displayName:  "Azure DevOps License"
 	inputs:
-		AccessToken:  "$(atokent)"
+	AccessToken:  "$(atokent)"
 # Below task added for packaging the generated log as build artifacts ONLY FOR WINDOWS BUILD AGENT
 
 -  task:  PublishBuildArtifacts@1
 	displayName:  'Publish Artifact: completon_log'
 	inputs:
-		ArtifactName:  'completon_log'
+	ArtifactName:  'completon_log'
 ```
 
 ##  Success story
