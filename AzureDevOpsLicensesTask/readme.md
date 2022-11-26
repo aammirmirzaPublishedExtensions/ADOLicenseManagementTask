@@ -1,4 +1,4 @@
-#  Azure DevOps User License Management
+#  Azure DevOps User License Report
 
 
 
@@ -9,9 +9,7 @@
 Use to manage Azure DevOps License accross the platform. You can easyly track number and type of licenses accross the platform. It details you with UPNs to whome which type of license is assigned.
 
 
-
 Extension takes a close look at the number of Visual Studio Team Services subscribers in the organization and make sure that entitles users actively using their license with the last access date.
-
 
 
 <span  style="background-color: #83DFBE">With entitlemen changes _(Changing un-used Azure DevOps licences to STAKEHOLDER)_ the cost can be reduced for _Basic and Basic + Test_ user licenses.
