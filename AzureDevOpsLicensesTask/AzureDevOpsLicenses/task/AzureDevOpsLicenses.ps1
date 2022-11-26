@@ -83,9 +83,11 @@ Write-Host '##[command]Creating logs...'
 $result | Export-Csv -Path "AzDOLicenses_$($runnedDate).csv" -NoTypeInformation -Append
 Write-Host "##[command]Log file 'AzDOLicenses_$runnedDate.csv' has been created. Use copy file task and publish artifact task to get it packaged as build artifact"
 $status = Import-csv ./"AzDOLicenses_$($runnedDate).csv"
-$a | Group-Object License
-$status.where{$_.license -eq 'Stakeholder'}
-$t = @"
+$Stakeholder = (($status.where{$_.license -eq 'Stakeholder'}).Count)
+$Basic = (($status.where{$_.license -eq 'Basic'}).Count)
+$BasicTest = (($status.where{$_.license -eq 'Basic + Test'}).Count)
+
+$pie = @"
 ``````mermaid
 pie
     title Pie Chart
@@ -94,6 +96,7 @@ pie
     "Basic + Test" : "$($BasicTest)"
 ```````n
 "@
+$pie
 try {
   if (($env:Agent_OS) -eq 'Windows_NT') {
     Copy-Item AzDOLicenses_$runnedDate.csv -Destination "$($ENV:Build_ArtifactStagingDirectory)\AzDOLicenses_$runnedDate.csv" -Recurse -ErrorAction SilentlyContinue
