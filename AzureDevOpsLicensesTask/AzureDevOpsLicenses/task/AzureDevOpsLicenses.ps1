@@ -18,21 +18,19 @@ $t = @"
 Write-Host "$($t)"
 ################################################################
 try {
+  $EncodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$AccessToken"))
+  $Global:Header = @{Authorization = "Basic $encodedPat" }
 # Getting list of all organization within the AzDO
-$uProfile = Invoke-RestMethod -Uri 'https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=6.0' -Method get -Headers $AzureDevOpsAuthenicationHeader
+$uProfile = Invoke-RestMethod -Uri 'https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=6.0' -Method get -Headers $Global:Header
 $uProfile.publicAlias
 
-$allOrganization = Invoke-RestMethod -Uri "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$($uprofile.publicAlias)&api-version=6.0" -Method get -Headers $AzureDevOpsAuthenicationHeader
-$EncodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$AccessToken"))
-$Global:Header = @{Authorization = "Basic $encodedPat" }
-
+$allOrganization = Invoke-RestMethod -Uri "https://app.vssps.visualstudio.com/_apis/accounts?memberId=$($uprofile.publicAlias)&api-version=6.0" -Method get -Headers $Global:Header
 }
 catch {
   { write-error "Not valid PAT token. Or Token expired. Regenrate PAT accross 'All Organization', in case of multiple orgs."
     exit
 }
 }
-$AzureDevOpsAuthenicationHeader = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($AccessToken)")) }
 
 Write-Host '---------------------------------------------'
 Write-Host '##[command]Summary'
