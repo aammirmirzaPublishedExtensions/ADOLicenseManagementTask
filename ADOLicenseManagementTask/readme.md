@@ -2,6 +2,9 @@
 
 #### Author - Aammir Mirza
 
+
+[![Donate](images/Paypal.jpg)](https://www.paypal.me/aammirmirza/7)
+
 Use to manage Azure DevOps License cost. For un-used licenses it changes the user entitlement to Stakeholder. As a best prectice in cost savings it reduces the cost for un-used licenses.
 
 Extension takes a close look at the number of Visual Studio Team Services subscribers in the organization and make sure that entitles users actively using their license.
