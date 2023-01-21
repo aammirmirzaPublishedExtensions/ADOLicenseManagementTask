@@ -4,6 +4,7 @@
 
 ####  Author - Aammir Mirza
 
+[![Donate](images/Paypal.jpg)](https://www.paypal.me/aammirmirza/7
 
 
 Use to manage Azure DevOps License accross the platform. You can easyly track number and type of licenses accross the platform. It details you with UPNs to whome which type of license is assigned.
