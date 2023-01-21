@@ -134,11 +134,11 @@ Please make sure to update tests as appropriate.
 
 E.g:
 
-|Organization    |Licensed                       |UserEmail                    |Remark|
-|----------------|-------------------------------|-----------------------------|-----------|
-|myorganization|Stakeholder            |myemai@email.com          |_NeverLoggedIn|
-|myorganization|Stakeholder            |excluded@email.com          |_Skipped|
-|myorganization|Error_changing_license            |orgadmin@email.com          |_OrgAdminOrPermissionIssue|
+| Organization   | Licensed               | UserEmail          | Remark                     |
+| -------------- | ---------------------- | ------------------ | -------------------------- |
+| myorganization | Stakeholder            | myemai@email.com   | _NeverLoggedIn             |
+| myorganization | Stakeholder            | excluded@email.com | _Skipped                   |
+| myorganization | Error_changing_license | orgadmin@email.com | _OrgAdminOrPermissionIssue |
 
 * ` Feature added to consider all those users whome access granted bit they never logged-in even for the first time. Saving the license cost for such users as well.
 
@@ -163,6 +163,10 @@ Fixed log file generation issue
 Fixed skip logic for the Admins and exceptional users
 
 Note: Some cases pipeline status fails (Manual error state), still will generate the csv log with details of failure user IDs.
+
+#### v1.191.1
+Added the feature to find all the accessible organization with the provided PAT. Now **`Organization`** variable is only needed when you want to run the optimization for the specific sets of AzDO Organizations. If It is left blank, it will run agains all the accesible organization from the PAT token.
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
