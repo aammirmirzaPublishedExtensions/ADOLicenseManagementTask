@@ -1,5 +1,5 @@
 param (
-  $AccessToken,
+  $AccessToken=#CLcaVwwypYe99Yo5g1NTHqnnzFOLwvXifyBYZ6zEgN4YXNUyFFJEJQQJ99BEACAAAAAAAAAAAAAGAZDO4LlD",
   $NumberOfMonths,
   $usersExcludedFromLicenseChange = @(),
   $Organizations = @(),
@@ -7,7 +7,7 @@ param (
   $SMTP_UserName,
   $SMTP_Password,
   $sentFrom,
-  $adiitionalComment
+  $aditionalComment
 )
 $result = @()
 ################################################################
@@ -48,7 +48,7 @@ function sendEmailNotification {
     From                       = $sentFrom
     To                         = $to
     Subject                    = 'Azure DevOps license downgraded'
-    Body                       = "Your license has been downgraded to STAKEHOLDER. $($adiitionalComment)"
+    Body                       = "Your license has been downgraded to STAKEHOLDER. $($aditionalComment)"
     DeliveryNotificationOption = 'OnFailure'#, 'OnSuccess'
   }
   # write-host $mail
@@ -80,8 +80,11 @@ function License-Change {
   #If you do not now the ID, you can grap it with the following cmdlet if you define the emailaddres
   az devops user update --license-type $licenseName --user $emailAddress --org "https://dev.azure.com/$($parOrganization)"
 }
+$errorValue = ""
+$countWarning = 0
+$authExceptionValue = 0
 
-$EncodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$AccessToken"))
+$encodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$AccessToken"))
 $Global:Header = @{Authorization = "Basic $encodedPat" }
 
 # Getting list of all organization within the AzDO
@@ -178,7 +181,7 @@ try {
           $result += $obj
           # send email notofication to user
           if ($emailNotify.Contains('true')) {
-            sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
+            sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -aditionalComment $aditionalComment
           }
         }
         elseif (!$ResponseNl.isSuccess) {
@@ -242,7 +245,7 @@ try {
           $result += $obj
           # send email notofication to user
           if ($emailNotify.Contains('true')) {
-            sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -adiitionalComment $adiitionalComment
+            sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -aditionalComment $aditionalComment
           }
         }
         elseif (!$Response.isSuccess) {
