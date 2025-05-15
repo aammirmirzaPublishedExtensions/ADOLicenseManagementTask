@@ -72,10 +72,10 @@ stages:
       #     extensionRoot: '$(extensionRoot)'
       #     taskName: 'GetBuildDefinitionVariableValueTask'
 
-      - task: TfxInstaller@3
+      - task: TfxInstaller@5
         displayName: 'Install Tfx Tool'
         inputs:
-          version: 'v0.8.x'
+          version: 'v0.x'
           checkLatest: true
 
       - task: ms-devlabs.vsts-developer-tools-build-tasks.package-extension-build-task.PackageAzureDevOpsExtension@3
