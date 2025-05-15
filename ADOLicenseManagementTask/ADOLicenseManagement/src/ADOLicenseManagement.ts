@@ -15,11 +15,6 @@ export async function run() {
         let NumberOfMonths = tl.getInput("NumberOfMonths");
         let usersExcludedFromLicenseChange = tl.getInput("usersExcludedFromLicenseChange");
         let AccessToken = tl.getInput("AccessToken");
-        let emailNotify = tl.getInput("emailNotify");
-        let SMTP_UserName = tl.getInput("SMTP_UserName");
-        let SMTP_Password = tl.getInput("SMTP_Password");
-        let sentFrom = tl.getInput("sentFrom");
-        let adiitionalComment = tl.getInput("adiitionalComment");
 
         // let teamproject = process.env.SYSTEM_TEAMPROJECT;
         // let releaseid = process.env.RELEASE_RELEASEID;
@@ -77,30 +72,6 @@ export async function run() {
         if (usersExcludedFromLicenseChange) {
             args.push("-usersExcludedFromLicenseChange");
             args.push(usersExcludedFromLicenseChange);
-        }
-        if (emailNotify) {
-            args.push("-emailNotify");
-            args.push(emailNotify);
-        }
-
-        if (SMTP_UserName) {
-            args.push("-SMTP_UserName");
-            args.push(SMTP_UserName);
-        }
-
-        if (SMTP_Password) {
-            args.push("-SMTP_Password");
-            args.push(SMTP_Password);
-        }
-
-        if (sentFrom) {
-            args.push("-sentFrom");
-            args.push(sentFrom);
-        }
-
-        if (adiitionalComment) {
-            args.push("-adiitionalComment");
-            args.push(adiitionalComment);
         }
 
         if (verbose) {
