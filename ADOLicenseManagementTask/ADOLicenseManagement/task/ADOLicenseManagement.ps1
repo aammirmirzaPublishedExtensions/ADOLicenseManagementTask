@@ -1,5 +1,5 @@
 param (
-  $AccessToken=#CLcaVwwypYe99Yo5g1NTHqnnzFOLwvXifyBYZ6zEgN4YXNUyFFJEJQQJ99BEACAAAAAAAAAAAAAGAZDO4LlD",
+  $AccessToken",
   $NumberOfMonths,
   $usersExcludedFromLicenseChange = @(),
   $Organizations = @(),
