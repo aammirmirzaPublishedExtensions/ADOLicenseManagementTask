@@ -1,13 +1,8 @@
 param (
-  $AccessToken=#CLcaVwwypYe99Yo5g1NTHqnnzFOLwvXifyBYZ6zEgN4YXNUyFFJEJQQJ99BEACAAAAAAAAAAAAAGAZDO4LlD",
+  $AccessToken",
   $NumberOfMonths,
   $usersExcludedFromLicenseChange = @(),
-  $Organizations = @(),
-  $emailNotify,
-  $SMTP_UserName,
-  $SMTP_Password,
-  $sentFrom,
-  $aditionalComment
+  $Organizations = @()
 )
 $result = @()
 ################################################################
@@ -27,39 +22,6 @@ $t = @"
 Write-Host "$($t)"
 ################################################################
 ######################################eMail notification added##############################################
-function sendEmailNotification {
-  param (
-    $SMTP_UserName,
-    $SMTP_Password,
-    $sentFrom = $SMTP_UserName,
-    $to,
-    $aditionalComment
-  )
-  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-  $SMTP_Password = $SMTP_Password | ConvertTo-SecureString -AsPlainText -Force
-  $credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $SMTP_UserName, $SMTP_Password
-
-  ## Define the Send-MailMessage parameters
-  $mail = @{
-    SmtpServer                 = 'smtp.office365.com'
-    Port                       = '587'
-    UseSSL                     = $true
-    Credential                 = $credential
-    From                       = $sentFrom
-    To                         = $to
-    Subject                    = 'Azure DevOps license downgraded'
-    Body                       = "Your license has been downgraded to STAKEHOLDER. $($aditionalComment)"
-    DeliveryNotificationOption = 'OnFailure'#, 'OnSuccess'
-  }
-  # write-host $mail
-  try {
-    Send-MailMessage @mail -EA SilentlyContinue -WarningAction silentlyContinue
-    Write-Host "##[section]$($to) - has been notified"
-  }
-  catch {
-    Write-Host "##[error]$($to) - mail cannot be delivered check your SMTP configuraton / credentials"
-  }
-}
 function Get-UserUri {
   param (
     [string] [Parameter(Mandatory = $true)] $OrganizationUri,
@@ -179,10 +141,6 @@ try {
             Remark       = '_NeverLoggedIn'
           }
           $result += $obj
-          # send email notofication to user
-          if ($emailNotify.Contains('true')) {
-            sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -aditionalComment $aditionalComment
-          }
         }
         elseif (!$ResponseNl.isSuccess) {
           # Need to skip this because of the owner of the ADO Org.
@@ -243,10 +201,6 @@ try {
             Remark       = "_inActive_$($NumberOfMonths)_months"
           }
           $result += $obj
-          # send email notofication to user
-          if ($emailNotify.Contains('true')) {
-            sendEmailNotification -SMTP_UserName $SMTP_UserName -SMTP_Password $SMTP_Password -sentFrom $sentFrom -to $UserNl.User.mailAddress -aditionalComment $aditionalComment
-          }
         }
         elseif (!$Response.isSuccess) {
           # Need to skip this because of the owner of the ADO Org.
