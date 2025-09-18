@@ -28,7 +28,7 @@ variables:
   privateExtentionsTag: 'Private'
   taskID: 'AammirMirza'
   PublisherID: 'AammirMirza'
-  vmImage: 'windows-latest'
+  vmImage: 'windows-2025'
   # - group: BuildUpdatingExtension
     # this group includes the following variables
     #  extensionRoot - working folder E.g- abcTask
