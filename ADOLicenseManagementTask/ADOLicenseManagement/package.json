@@ -24,6 +24,7 @@
     "@types/node": "^22.2.3",
     "chai": "^4.3.10",
     "del": "^7.0.0",
+    "del-cli": "^4.0.0",
     "mocha": "^10.2.0",
     "mocha-junit-reporter": "^2.0.2",
     "ts-node": "^10.9.1",
