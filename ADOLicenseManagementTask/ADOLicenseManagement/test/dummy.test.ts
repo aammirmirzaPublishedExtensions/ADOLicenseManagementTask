@@ -4,6 +4,6 @@ import "mocha";
 
 describe("A empty set of tests to check the CI/CD system", () => {
     it("should be able to compare two numbers", () => {
-      expect(1 === 1);
+        expect(1 === 1);
     });
-  });
+});

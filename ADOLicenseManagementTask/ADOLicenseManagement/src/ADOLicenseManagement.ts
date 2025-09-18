@@ -1,37 +1,22 @@
-import tl = require("azure-pipelines-task-lib/task");
-import { basename } from "path";
-
-import {
-    logInfo,
-    logError,
-    getSystemAccessToken
-}  from "./agentSpecific";
+import * as tl from "azure-pipelines-task-lib/task";
+import { logInfo, logError } from "./agentSpecific";
+import { spawn } from "child_process";
 
 export async function run() {
     try {
-
         // Get the build and release details
-        let Organizations = tl.getInput("Organizations");
-        let NumberOfMonths = tl.getInput("NumberOfMonths");
-        let usersExcludedFromLicenseChange = tl.getInput("usersExcludedFromLicenseChange");
-        let AccessToken = tl.getInput("AccessToken");
-        let emailNotify = tl.getInput("emailNotify");
-        let SMTP_UserName = tl.getInput("SMTP_UserName");
-        let SMTP_Password = tl.getInput("SMTP_Password");
-        let sentFrom = tl.getInput("sentFrom");
-        let adiitionalComment = tl.getInput("adiitionalComment");
+        const Organizations = tl.getInput("Organizations");
+        const NumberOfMonths = tl.getInput("NumberOfMonths");
+        const usersExcludedFromLicenseChange = tl.getInput("usersExcludedFromLicenseChange");
+        const AccessToken = tl.getInput("AccessToken");
+        const emailNotify = tl.getInput("emailNotify");
+        const smtpUserName = tl.getInput("SMTP_UserName");
+        const smtpPassword = tl.getInput("SMTP_Password");
+        const sentFrom = tl.getInput("sentFrom");
+        const adiitionalComment = tl.getInput("adiitionalComment");
 
-        // let teamproject = process.env.SYSTEM_TEAMPROJECT;
-        // let releaseid = process.env.RELEASE_RELEASEID;
-        // let buildid = process.env.BUILD_BUILDID;
+        const verbose = (tl.getVariable("System.Debug") === "true");
 
-        // we need to get the verbose flag passed in as script flag
-        var verbose = (tl.getVariable("System.Debug") === "true");
-// Generates automatic token for the running
-        // let url = tl.getEndpointUrl("SYSTEMVSSCONNECTION", false);
-        // let token = tl.getEndpointAuthorizationParameter("SYSTEMVSSCONNECTION", "ACCESSTOKEN", false);
-
-        // find the executeable
         let executable = "pwsh";
         if (tl.getVariable("AGENT.OS") === "Windows_NT") {
             if (!tl.getBoolInput("usePSCore")) {
@@ -42,86 +27,46 @@ export async function run() {
             logInfo(`Using executable '${executable}' as only option on '${tl.getVariable("AGENT.OS")}'`);
         }
 
-        // we need to NOT pass the null param
-        // PS args ScriptArguments: '-Method "POST" -ClientToken $(akamai-luna-clienttoken-2) -ClientAccessToken $(akamai-luna-clientaccess-2)
-        // -ClientSecret $(akamai-luna-clientsecret-2) -hostAddress $(hostAddress) -Action invalidate -URLs $(URL)'
-        // var args = [__dirname + "\\AkamaiFastPurgeTask.ps1",
-        var args = [__dirname + "\\ADOLicenseManagement.ps1"
-                // "-AccessToken", token
-                // "-Method", Method,
-                // "-ClientToken", ClientToken,
-                // "-ClientAccessToken", ClientAccessToken,
-                // "-ClientSecret", ClientSecret,
-                // "-hostAddress", hostAddress,
-                // "-Action", Action,
-                // "-URLs", URLs,
-                // "-Tags", Tags,
-                // "-Network", Network
-        ];
+        const args = [__dirname + "\\ADOLicenseManagement.ps1"];
 
         if (Organizations) {
-            args.push("-Organizations");
-            args.push(Organizations);
+            args.push("-Organizations", Organizations);
         }
-
         if (NumberOfMonths) {
-            args.push("-NumberOfMonths");
-            args.push(NumberOfMonths);
+            args.push("-NumberOfMonths", NumberOfMonths);
         }
-
         if (AccessToken) {
-            args.push("-AccessToken");
-            args.push(AccessToken);
+            args.push("-AccessToken", AccessToken);
         }
-
         if (usersExcludedFromLicenseChange) {
-            args.push("-usersExcludedFromLicenseChange");
-            args.push(usersExcludedFromLicenseChange);
+            args.push("-usersExcludedFromLicenseChange", usersExcludedFromLicenseChange);
         }
         if (emailNotify) {
-            args.push("-emailNotify");
-            args.push(emailNotify);
+            args.push("-emailNotify", emailNotify);
         }
-
-        if (SMTP_UserName) {
-            args.push("-SMTP_UserName");
-            args.push(SMTP_UserName);
+        if (smtpUserName) {
+            args.push("-SMTP_UserName", smtpUserName);
         }
-
-        if (SMTP_Password) {
-            args.push("-SMTP_Password");
-            args.push(SMTP_Password);
+        if (smtpPassword) {
+            args.push("-SMTP_Password", smtpPassword);
         }
-
         if (sentFrom) {
-            args.push("-sentFrom");
-            args.push(sentFrom);
+            args.push("-sentFrom", sentFrom);
         }
-
         if (adiitionalComment) {
-            args.push("-adiitionalComment");
-            args.push(adiitionalComment);
+            args.push("-adiitionalComment", adiitionalComment);
         }
-
         if (verbose) {
             args.push("-Verbose");
         }
 
         logInfo(`${executable} ${args.join(" ")}`);
 
-        var spawn = require("child_process").spawn, child;
-        child = spawn(executable, args);
-        child.stdout.on("data", function (data) {
-            logInfo(data.toString());
-        });
-        child.stderr.on("data", function (data) {
-            logError(data.toString());
-        });
-        child.on("exit", function () {
-            logInfo("Script finished");
-        });
-    }
-    catch (err) {
+        const child = spawn(executable, args);
+        child.stdout.on("data", (data) => logInfo(data.toString()));
+        child.stderr.on("data", (data) => logError(data.toString()));
+        child.on("exit", () => logInfo("Script finished"));
+    } catch (err) {
         logError(err);
     }
 }
