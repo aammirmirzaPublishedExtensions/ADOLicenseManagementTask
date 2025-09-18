@@ -7,7 +7,7 @@
     "copy": "ncp ./node_modules ./task/node_modules && ncp ./dist/src ./task",
     "clean": "del-cli ./dist/src ./dist/test ./task/*.js ./task/*.js.map ./task/node_modules",
     "transpile": "tsc -p ./",
-    "lint": "eslint src/*.ts test/*.ts",
+    "lint": "tslint -c tslint.json src/*.ts test/*.ts",
     "test": "mocha -r ts-node/register ./test/*.test.ts --reporter mocha-junit-reporter --reporter-options mochaFile=./test-output/test-results.xml",
     "test-no-logger": "mocha -r ts-node/register ./test/*.test.ts"
   },
