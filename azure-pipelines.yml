@@ -50,7 +50,7 @@ stages:
         demands: npm
       steps:
       # version all the task in the extension
-      - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+      - task: replacetokens@6
         displayName: 'Setting the version for tasks in extension'
         inputs:
           rootDirectory: '$(Build.SourcesDirectory)/$(extensionRoot)'
@@ -72,13 +72,12 @@ stages:
       #     extensionRoot: '$(extensionRoot)'
       #     taskName: 'GetBuildDefinitionVariableValueTask'
 
-      - task: TfxInstaller@3
+
+      - task: TfxInstaller@5
         displayName: 'Install Tfx Tool'
         inputs:
-          version: 'v0.8.x'
-          checkLatest: true
-
-      - task: ms-devlabs.vsts-developer-tools-build-tasks.package-extension-build-task.PackageAzureDevOpsExtension@3
+          version: 'latest'
+      - task: PackageAzureDevOpsExtension@5
         displayName: 'Package and Publish Extension as a PROD Package '
         inputs:
           rootFolder: '$(extensionRoot)'
@@ -89,6 +88,7 @@ stages:
           updateTasksVersion: true
           updateTasksVersionType: minor
           extensionVisibility: private
+
       - task: CopyFiles@2
         displayName: 'Copy Docs'
         inputs:
