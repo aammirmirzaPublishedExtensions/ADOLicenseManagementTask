@@ -76,10 +76,11 @@
         "ms.vss-distributed-task.tasks"
       ],
       "properties": {
-        "name": "O365 Copilot License Optimization",
+        "name": "O365CopilotLicenseOptimization/task"
         "description": "Task to optimize O365 Copilot licenses usage"
       }
     }
   ]
 }
+
 
