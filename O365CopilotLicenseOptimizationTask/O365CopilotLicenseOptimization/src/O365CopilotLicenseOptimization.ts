@@ -1,7 +1,5 @@
 import * as tl from "azure-pipelines-task-lib/task";
-import { logInfo, logError } from "./agentSpecific";
 import { spawn } from "child_process";
-
 import {
     logInfo,
     logError,
@@ -67,3 +65,4 @@ export async function run() {
     }
 }
 run();
+
