@@ -1,5 +1,6 @@
-import tl = require("azure-pipelines-task-lib/task");
-import { basename } from "path";
+import * as tl from "azure-pipelines-task-lib/task";
+import { logInfo, logError } from "./agentSpecific";
+import { spawn } from "child_process";
 
 import {
     logInfo,
@@ -66,3 +67,4 @@ export async function run() {
     }
 }
 run();
+
