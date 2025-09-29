@@ -5,17 +5,14 @@ import {
     logError,
     getSystemAccessToken
 } from "./agentSpecific";
-
 export async function run() {
     try {
         // Get the build and release details
         let inactiveDaysThreshold = tl.getInput("inactiveDaysThreshold");
         let Revoke = tl.getInput("Revoke");
-
         // let teamproject = process.env.SYSTEM_TEAMPROJECT;
         // let releaseid = process.env.RELEASE_RELEASEID;
         // let buildid = process.env.BUILD_BUILDID;
-
         // we need to get the verbose flag passed in as script flag
         var verbose = (tl.getVariable("System.Debug") === "true");
         // Generates automatic token for the running
@@ -51,7 +48,6 @@ export async function run() {
             args.push("-inactiveDaysThreshold");
             args.push(inactiveDaysThreshold);
         }
-
         if (Revoke) {
             args.push("-Revoke", Revoke);
         }
