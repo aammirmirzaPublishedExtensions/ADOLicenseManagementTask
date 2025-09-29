@@ -9,7 +9,6 @@ import {
 
 export async function run() {
     try {
-
         // Get the build and release details
         let inactiveDaysThreshold = tl.getInput("inactiveDaysThreshold");
         let Revoke = tl.getInput("Revoke");
@@ -23,7 +22,6 @@ export async function run() {
         // Generates automatic token for the running
         // let url = tl.getEndpointUrl("SYSTEMVSSCONNECTION", false);
         // let token = tl.getEndpointAuthorizationParameter("SYSTEMVSSCONNECTION", "ACCESSTOKEN", false);
-
         // find the executeable
         let executable = "pwsh";
         if (tl.getVariable("AGENT.OS") === "Windows_NT") {
@@ -34,7 +32,6 @@ export async function run() {
         } else {
             logInfo(`Using executable '${executable}' as only option on '${tl.getVariable("AGENT.OS")}'`);
         }
-
         // we need to NOT pass the null param
         // PS args ScriptArguments: '-Method "POST" -ClientToken $(akamai-luna-clienttoken-2) -ClientAccessToken $(akamai-luna-clientaccess-2)
         // -ClientSecret $(akamai-luna-clientsecret-2) -hostAddress $(hostAddress) -Action invalidate -URLs $(URL)'
@@ -51,7 +48,6 @@ export async function run() {
             // "-Tags", Tags,
             // "-Network", Network
         ];
-
         if (inactiveDaysThreshold) {
             args.push("-inactiveDaysThreshold");
             args.push(inactiveDaysThreshold);
@@ -59,11 +55,8 @@ export async function run() {
 
         if (Revoke) {
             args.push("-Revoke", Revoke);
-
         }
-
         logInfo(`${executable} ${args.join(" ")}`);
-
         const child = spawn(executable, args);
         child.stdout.on("data", (data) => logInfo(data.toString()));
         child.stderr.on("data", (data) => logError(data.toString()));
@@ -72,6 +65,4 @@ export async function run() {
         logError(err);
     }
 }
-
-
 run();
