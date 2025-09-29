@@ -1,124 +1,208 @@
-#  Azure DevOps User License Report
+# O365 Copilot License Optimization (Azure DevOps Task)
 
+Optimize allocation and utilization of Microsoft 365 (O365) Copilot licenses by identifying inactive / low‑usage users and generating actionable reports for cost reduction.
 
+---
 
-####  Author - Aammir Mirza
+## Why This Task
 
-[![Donate](images/Paypal.jpg)](https://www.paypal.me/aammirmirza/7
+Copilot licenses are premium. Unused or rarely used assignments = waste. This task:
+- Pulls Copilot activity signals (Last activity per workload: Word, Excel, PowerPoint, Outlook, Teams, OneNote, Loop, Chat).
+- Correlates licensing vs recent usage.
+- Produces CSV report for re-harvesting / re-assignment decisions.
+- Enables automation in Azure Pipelines (scheduled governance job).
 
+---
 
-Use to manage Azure DevOps License accross the platform. You can easyly track number and type of licenses accross the platform. It details you with UPNs to whome which type of license is assigned.
+## Key Features
 
+| Capability | Description |
+|------------|-------------|
+| Usage Harvest | Aggregates per-user last activity across supported Copilot surfaces. |
+| Inactivity Detection | Flags users with no activity in X days (configurable). |
+| Export | CSV with readable column headers for BI / Excel review. |
+| Multi-Tenant Ready | Works against all tenants accessible to the provided token (if permitted). |
+| Pipeline Friendly | Windows & Linux agents (PowerShell 7 recommended). |
 
-Extension takes a close look at the number of Visual Studio Team Services subscribers in the organization and make sure that entitles users actively using their license with the last access date.
+---
 
+## Output Columns (Sample)
 
-<span  style="background-color: #83DFBE">With entitlemen changes _(Changing un-used Azure DevOps licences to STAKEHOLDER)_ the cost can be reduced for _Basic and Basic + Test_ user licenses.
+| Column | Meaning |
+|--------|---------|
+| Report Refresh Date | Snapshot date (UTC). |
+| User Principal Name | Licensed user's UPN. |
+| Display Name | Directory display name. |
+| Last Activity Date | Most recent Copilot interaction (any workload). |
+| <Workload> Copilot Last Activity | Per surface (Word / Excel / PowerPoint / Outlook / OneNote / Loop / Teams / Chat). |
+| Activity Period Detail | Raw period detail (if API returns period expansion). |
+| Inactive Days | Computed difference (today - last activity). |
+| Status Flag | Active / Stale / ReclaimCandidate (threshold based). |
+| RevokeLicense | Yes/No flag indicating candidate for reclaim based on policy. |
 
+(Exact fields depend on Graph response set/version.)
 
+---
 
-This can be easyly achieved with the respective task [ADO License Management](https://marketplace.visualstudio.com/items?itemName=AammirMirza.CP-ADOLicenseManagementpublic)
+## Sample Output (Excerpt)
 
+Blank cells = no recorded activity in the reporting window.
 
+| Report Refresh Date | User Principal Name        | Last Activity Date | Display Name | Copilot Chat Last Activity | Teams Copilot Last Activity | Word Copilot Last Activity | Excel Copilot Last Activity | PowerPoint Copilot Last Activity | Outlook Copilot Last Activity | OneNote Copilot Last Activity | Loop Copilot Last Activity | Activity Period Detail | RevokeLicense |
+|---------------------|----------------------------|--------------------|--------------|----------------------------|-----------------------------|----------------------------|------------------------------|----------------------------------|------------------------------|-------------------------------|----------------------------|-----------------------|---------------|
+| 26/09/2025          | User2@organization.com     |                    | User1        |                            |                             |                            |                              |                                  |                              |                               |                            | 180                   | Yes           |
+| 26/09/2025          | User1@organization.com     |                    | User2        |                            |                             |                            |                              |                                  |                              |                               |                            | 180                   | Yes           |
+| 26/09/2025          | User3@organization.com     | 23/06/2025         | User3        | 14/05/2024                 | 24/05/2025                  | 21/01/2025                 | 16/04/2024                   | 23/06/2025                       | 11/04/2025                   |                               |                            | 180                   | Yes           |
+| 26/09/2025          | User2@organization.com     |                    | User4        |                            |                             |                            |                              |                                  |                              |                               |                            | 180                   | Yes           |
+| 26/09/2025          | User1@organization.com     | 26/06/2025         | User5        |                            | 26/06/2025                  |                            |                              | 16/06/2025                       |                              |                               |                            | 180                   | Yes           |
+| 26/09/2025          | User3@organization.com     | 27/06/2025         | User6        | 12/05/2025                 | 04/06/2025                  |                            | 27/06/2025                   |                                  |                              |                               |                            | 180                   | Yes           |
+| 26/09/2025          | User2@organization.com     | 23/07/2025         | User7        | 23/07/2025                 |                             |                            |                              |                                  | 23/07/2025                   |                               |                            | 180                   | Yes           |
+| 26/09/2025          | User1@organization.com     |                    | User8        |                            |                             |                            |                              |                                  |                              |                               |                            | 180                   | Yes           |
 
-You can run the task accross all the organization that is scoped within your PAT.</span>
+---
 
+## Prerequisites
 
+| Item | Requirement |
+|------|-------------|
+| Azure AD App or Managed Identity | Permission to read usage reports. |
+| Microsoft Graph Permissions | Reports.Read.All (delegated) OR Reports.Read.All (application). |
+| PowerShell Modules (local runs) | Microsoft.Graph (if calling Graph directly). |
+| PAT (Azure DevOps) | Only needed for pipeline artifact publishing (System.AccessToken). |
 
-##  Platform
+---
 
+## PAT / Auth Notes
 
+This task itself (inside the extension) should use Microsoft Graph auth (client secret / certificate or delegated token). Ensure secrets are stored as secure pipeline variables or in a variable group backed by a Key Vault.
 
-* Windows *Provides logs file features that can be artifact*
+---
 
-* Linux
-
-
-
-##  Installation
-
-
-
-Download the Free _'Azure DevOps Licenses Tasks'_ from [here](https://marketplace.visualstudio.com/items?itemName=AammirMirza.CP-AzureDevOpsLicenses) and populate the below mentioned mandatory parameters to get it working
-
-Available task name after installation - 'Azure DevOps Licenses'
-
-
-
-##  Configuration
-
-
-
-###  Classic Pipeline (UI)
-
-
-
-* Generate PAT token for All accessible orgs. This token you will be using across all orgs for cost savings extension.
-* Adding the extension using classic pipeline (UI-Based pipeline in AzDO)
-
--- AccessToken pass token PAT that you have generated for all org, passing it as masked pipeline variable
-
-* Logs (csv) availble for artifact packaging as .CSV. Available output in pipeline artifact `(Limited feature for windows agent)`.
-
-####  Minimum required previlages for the token to perform the task
-
-* Members Entitlement Management (Read)
-
-##  Operation arguments
-
-Available command line options are:
-
-*  **`AccessToken`** Authentication token used in client auth. This token need to be generated for 'All Organization' in case of multiple organizations.
-####  YAML Usage
+## YAML Usage (Example)
 
 ```yaml
-
 steps:
+- task: O365CopilotLicenseOptimization-Task@1
+  displayName: "O365 Copilot License Optimization Scan"
+  inputs:
+    TenantId: '$(TENANT_ID)'
+    ClientId: '$(APP_CLIENT_ID)'
+    ClientSecret: '$(APP_CLIENT_SECRET)'   # mark secret
+    InactivityThresholdDays: '30'
+    OutputCsvPath: 'CopilotUsageReport.csv'
 
--  task:  AammirMirza.CP-AzureDevOpsLicensespublic.AzureDevOpsLicenses-Task.AzureDevOpsLicenses@1
-	displayName:  "Azure DevOps License"
-	inputs:
-	AccessToken:  "$(atokent)"
-# Below task added for packaging the generated log as build artifacts ONLY FOR WINDOWS BUILD AGENT
-
--  task:  PublishBuildArtifacts@1
-	displayName:  'Publish Artifact: completon_log'
-	inputs:
-	ArtifactName:  'completon_log'
+# Optional: publish the CSV
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Copilot Report"
+  inputs:
+    PathtoPublish: 'CopilotUsageReport.csv'
+    ArtifactName: 'copilot-usage'
 ```
 
-##  Success story
+---
 
+## Classic (UI) Setup
 
-##  GIF for reference
-Placeholder
+1. Add the task to a pipeline.
+2. Provide authentication mode + credentials.
+3. Set inactivity threshold (e.g., 30 / 45 / 60 days).
+4. Enable artifact publishing to capture the CSV.
 
-##  Required previlages for PAT
-* Members Entitlement Management (Read & Write)
+---
 
-##  Contributing
+## Interpreting Results
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-Please make sure to update tests as appropriate.
+| Status Flag | Action |
+|-------------|--------|
+| Active | Keep assigned. |
+| Stale | Monitor—approaching reclaim threshold. |
+| ReclaimCandidate | Consider removal / pool re-assignment. |
 
-##  Limitation
+Define thresholds internally (e.g., Stale ≥21 days inactivity, ReclaimCandidate ≥30).
 
-* Cannot change licenses or extensions inherited through group rules.
-* Organization admin cannot be downgraded to stakeholder license.
+---
 
-##  License
-[MIT](https://choosealicense.com/licenses/mit/)
+## Suggested Governance Flow
 
+1. Nightly / Weekly pipeline run.
+2. Produce CSV + push to central storage (Artifacts / Blob / SharePoint).
+3. Optional: Auto-create ticket / send email for ReclaimCandidates > N.
+4. After approval, revoke / unassign Copilot license centrally.
+5. Track reclaimed license count as KPI.
 
-##  Support
+---
 
-emailto: aammir.mirza@hotmail.com
+## Sample Post-Processing (PowerShell)
 
-Produce a flow chart:
+```powershell
+$rows = Import-Csv CopilotUsageReport.csv
+$reclaim = $rows | Where-Object { $_.'Status Flag' -eq 'ReclaimCandidate' }
+$reclaim | Export-Csv reclaim-targets.csv -NoTypeInformation
+```
+
+---
+
+## Security Considerations
+
+| Area | Guidance |
+|------|----------|
+| Secrets | Use secure variables; never commit secrets. |
+| Principle of Least Privilege | Grant only Reports.Read.All. |
+| Logging | Avoid writing raw tokens to logs. |
+| Data | Treat usage output as internal-only (contains user identifiers). |
+
+---
+
+## Troubleshooting
+
+| Symptom | Possible Cause | Resolution |
+|---------|----------------|-----------|
+| Empty CSV | Missing permission or no activity window data | Verify Reports.Read.All and correct API endpoint. |
+| 401 / 403 | Invalid client secret / expired consent | Re-grant admin consent in Entra ID. |
+| Date columns blank | Graph endpoint throttled / partial response | Re-run; add retry logic (future enhancement). |
+| Task fails in Linux agent | Legacy Windows-only path usage | Ensure script paths are POSIX compatible. |
+
+---
+
+## Roadmap
+
+- Teams chatbot integration
+- Auto email to inactive users before reclaim
+- Cost savings estimator
+- Delta mode (only changes since last run)
+- Integration with ServiceNow / Jira for reclaim workflows
+
+---
+
+## Contributing
+
+Issues & PRs welcome. Please describe scenario and attach anonymized sample output if reporting parsing issues.
+
+---
+
+## License
+
+MIT (unless superseded internally).
+
+---
+
+## Support
+
+Open an issue or email: aammir.mirza@hotmail.com
+
+---
+
+## High-Level Flow (Mermaid)
+
 ```mermaid
-graph LR
-A[Fetch License details] --> B{Need Optimizaton}
-B -- Yes --> C(License Optimization Task)
-B -- No --> D(Analyze/Publish report)
-C --> E(ADO License Task)
+flowchart LR
+A[Fetch Copilot Usage via Graph] --> B[Normalize & Flag Inactivity]
+B --> C{Inactivity >= Threshold?}
+C -- Yes --> D[Mark ReclaimCandidate]
+C -- No --> E[Mark Active/Stale]
+D --> F[Export CSV]
+E --> F[Export CSV]
+F --> G[Publish Artifact / Notify]
 ```
+
+---
