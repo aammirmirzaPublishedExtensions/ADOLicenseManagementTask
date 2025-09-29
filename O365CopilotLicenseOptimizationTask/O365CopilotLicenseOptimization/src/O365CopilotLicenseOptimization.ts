@@ -12,7 +12,7 @@ export async function run() {
 
         // Get the build and release details
         let inactiveDaysThreshold = tl.getInput("inactiveDaysThreshold");
-        let Revoke = tl.getBoolInput("Revoke");
+        let Revoke = tl.getInput("Revoke");
 
         // let teamproject = process.env.SYSTEM_TEAMPROJECT;
         // let releaseid = process.env.RELEASE_RELEASEID;
@@ -72,5 +72,6 @@ export async function run() {
         logError(err);
     }
 }
+
 
 run();
