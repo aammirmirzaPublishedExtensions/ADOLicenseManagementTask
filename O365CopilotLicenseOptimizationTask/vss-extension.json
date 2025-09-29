@@ -61,7 +61,7 @@
   },
   "files": [
     {
-      "path": "AzureDevOpsLicenses"
+      "path": "O365CopilotLicenseOptimization"
     },
     {
       "path": "images",
@@ -82,3 +82,4 @@
     }
   ]
 }
+
