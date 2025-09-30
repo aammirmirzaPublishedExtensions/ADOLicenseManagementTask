@@ -24,13 +24,6 @@ Write-Host "$($t)"
 ################################################################
 
 # Add simple validation + debug
-Write-Host "TenantId param present: $([bool]$TenantId)"
-Write-Host "ClientId param length : $($ClientId.Length)"
-if (-not $ClientSecret) {
-    Write-Error "ClientSecret not passed from task. Ensure service connection is SP (secret) based, not Managed Identity or Certificate."
-    exit 1
-}
-
 Write-Host "TenantId supplied: $TenantId"
 Write-Host "ClientId supplied: $ClientId"
 Write-Host "ClientSecret present: $([bool]$ClientSecret)"
@@ -98,7 +91,6 @@ try {
 # Define parameters
 $period = "D180"  # Options: D7, D30, D90, D180
 $outputPath = ".\CopilotUsageReport.csv"  # Adjust path as needed
-# Fetch the Copilot usage user detail report
 
 # Build initial request
 $uri = "https://graph.microsoft.com/beta/reports/getMicrosoft365CopilotUsageUserDetail(period='$period')"
@@ -149,8 +141,9 @@ try {
             }
         }
 
-        write-Host "✅ Fetched $(($records | Measure-Object).Count) records from Copilot usage report."
-        if ($Revoke.Contains('true')) {
+        Write-Host "✅ Fetched $(($records | Measure-Object).Count) records from Copilot usage report."
+        
+        if ($Revoke -and $Revoke.Contains('true')) {
             $usersToRevoke = $records | Where-Object { $_.RevokeLicense -eq 'Yes' }
             foreach ($user in $usersToRevoke) {
                 $upn = $user.'User Principal Name'
@@ -188,11 +181,9 @@ try {
         }
         else {
             Write-Host "ℹ️ Revoke switch not set. No licenses were revoked."
-            {
-                Write-Host "ℹ️ Revoke switch not set. No licenses were revoked."
-                $records | Where-Object { $_.RevokeLicense -eq 'Yes' } | Format-Table -AutoSize
-            }
+            $records | Where-Object { $_.RevokeLicense -eq 'Yes' } | Format-Table -AutoSize
         }
+        
         # Export
         $records | Export-Csv -Path $outputPath -NoTypeInformation -Encoding UTF8
         Write-Host "✅ Copilot usage report saved to $outputPath"
@@ -203,4 +194,5 @@ try {
 }
 catch {
     Write-Error "Failed to fetch report: $($_.Exception.Message)"
+    exit 1
 }
