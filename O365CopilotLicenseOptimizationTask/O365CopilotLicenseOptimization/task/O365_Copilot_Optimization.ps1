@@ -117,8 +117,7 @@ try {
                 try {
                     $lastActivityDate = [datetime]$lastActivityRaw
                     $inactive = ((Get-Date) - $lastActivityDate).TotalDays -gt $inactiveDaysThreshold
-                }
-                catch {
+                } catch {
                     $inactive = $true
                 }
             }
@@ -142,7 +141,7 @@ try {
         }
 
         Write-Host "✅ Fetched $(($records | Measure-Object).Count) records from Copilot usage report."
-        
+
         if ($Revoke -and $Revoke.Contains('true')) {
             $usersToRevoke = $records | Where-Object { $_.RevokeLicense -eq 'Yes' }
             foreach ($user in $usersToRevoke) {
@@ -165,34 +164,29 @@ try {
                             # Remove Copilot license
                             # Set-MgUserLicense -UserId $upn -RemoveLicenses @("c42b9cae-ea4f-4ab7-9717-81576235ccac") -ErrorAction Stop
                             Write-Host "🔴 Revoked Copilot license for inactive user: $upn"
-                        }
-                        else {
+                        } else {
                             Write-Host "⚪ User $upn does not have a Copilot license assigned. Skipping."
                         }
-                    }
-                    else {
+                    } else {
                         Write-Warning "⚠️ User not found: $upn"
                     }
-                }
-                catch {
+                } catch {
                     Write-Error "❌ Failed to process user ${upn}: $($_.Exception.Message)"
                 }
             }
-        }
-        else {
+        } else {
             Write-Host "ℹ️ Revoke switch not set. No licenses were revoked."
             $records | Where-Object { $_.RevokeLicense -eq 'Yes' } | Format-Table -AutoSize
         }
-        
+
         # Export
         $records | Export-Csv -Path $outputPath -NoTypeInformation -Encoding UTF8
         Write-Host "✅ Copilot usage report saved to $outputPath"
-    }
-    else {
+    } else {
         Write-Warning "No data returned for period $period."
     }
-}
-catch {
+} catch {
     Write-Error "Failed to fetch report: $($_.Exception.Message)"
     exit 1
 }
+
