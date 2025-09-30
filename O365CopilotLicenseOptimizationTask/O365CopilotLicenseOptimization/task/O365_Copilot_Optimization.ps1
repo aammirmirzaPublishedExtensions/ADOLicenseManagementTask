@@ -105,7 +105,9 @@ try {
         $nextLink = $response.'@odata.nextLink'
         while ($nextLink) {
             $response = Invoke-MgGraphRequest -Uri $nextLink -Method GET -OutputType PSObject
-            if ($response.value) { $allRaw += $response.value }
+            if ($response.value) { 
+                $allRaw += $response.value 
+            }
             $nextLink = $response.'@odata.nextLink'
         }
 
@@ -117,7 +119,8 @@ try {
                 try {
                     $lastActivityDate = [datetime]$lastActivityRaw
                     $inactive = ((Get-Date) - $lastActivityDate).TotalDays -gt $inactiveDaysThreshold
-                } catch {
+                }
+                catch {
                     $inactive = $true
                 }
             }
@@ -144,6 +147,8 @@ try {
 
         if ($Revoke -and $Revoke.Contains('true')) {
             $usersToRevoke = $records | Where-Object { $_.RevokeLicense -eq 'Yes' }
+            Write-Host "🔍 Found $($usersToRevoke.Count) users flagged for license revocation."
+            
             foreach ($user in $usersToRevoke) {
                 $upn = $user.'User Principal Name'
                 try {
@@ -161,32 +166,39 @@ try {
                         }
 
                         if ($hasCopilotLicense) {
-                            # Remove Copilot license
+                            # Remove Copilot license (uncomment to enable actual revocation)
                             # Set-MgUserLicense -UserId $upn -RemoveLicenses @("c42b9cae-ea4f-4ab7-9717-81576235ccac") -ErrorAction Stop
-                            Write-Host "🔴 Revoked Copilot license for inactive user: $upn"
-                        } else {
+                            Write-Host "🔴 Would revoke Copilot license for inactive user: $upn"
+                        }
+                        else {
                             Write-Host "⚪ User $upn does not have a Copilot license assigned. Skipping."
                         }
-                    } else {
+                    }
+                    else {
                         Write-Warning "⚠️ User not found: $upn"
                     }
-                } catch {
+                }
+                catch {
                     Write-Error "❌ Failed to process user ${upn}: $($_.Exception.Message)"
                 }
             }
-        } else {
+        }
+        else {
             Write-Host "ℹ️ Revoke switch not set. No licenses were revoked."
-            $records | Where-Object { $_.RevokeLicense -eq 'Yes' } | Format-Table -AutoSize
+            $candidatesCount = ($records | Where-Object { $_.RevokeLicense -eq 'Yes' } | Measure-Object).Count
+            Write-Host "📊 $candidatesCount users would be flagged for revocation."
+            $records | Where-Object { $_.RevokeLicense -eq 'Yes' } | Select-Object 'User Principal Name','Last Activity Date','RevokeLicense' | Format-Table -AutoSize
         }
 
         # Export
         $records | Export-Csv -Path $outputPath -NoTypeInformation -Encoding UTF8
         Write-Host "✅ Copilot usage report saved to $outputPath"
-    } else {
+    }
+    else {
         Write-Warning "No data returned for period $period."
     }
-} catch {
+}
+catch {
     Write-Error "Failed to fetch report: $($_.Exception.Message)"
     exit 1
 }
-
