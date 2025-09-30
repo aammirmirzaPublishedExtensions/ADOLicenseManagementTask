@@ -52,7 +52,7 @@ export async function run() {
 
         const scriptPath = `${__dirname}\\O365_Copilot_Optimization.ps1`;
         const args: string[] = [scriptPath, "-TenantId", auth.tenantId, "-ClientId", auth.clientId, "-inactiveDaysThreshold", inactive!];
-        if (revoke) args.push("-Revoke", revoke);
+        if (revoke) {args.push("-Revoke", revoke);}
 
         if (auth.clientSecret) {
             // Secret-based SP
