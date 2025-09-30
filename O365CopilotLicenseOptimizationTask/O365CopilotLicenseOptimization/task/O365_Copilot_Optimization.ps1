@@ -1,4 +1,3 @@
-// filepath: c:\DSV\AzDO\Repos\ADOLicenseManagementTask\O365CopilotLicenseOptimizationTask\O365CopilotLicenseOptimization\task\O365_Copilot_Optimization.ps1
 param(
     [string] $TenantId,
     [string] $ClientId,
@@ -32,64 +31,67 @@ if (-not $ClientSecret) {
     exit 1
 }
 
-function Get-GraphTokenViaClientCred {
-    param(
-        [Parameter(Mandatory)] [string] $TenantId,
-        [Parameter(Mandatory)] [string] $ClientId,
-        [Parameter(Mandatory)] [string] $ClientSecret
-    )
+Write-Host "TenantId supplied: $TenantId"
+Write-Host "ClientId supplied: $ClientId"
+Write-Host "ClientSecret present: $([bool]$ClientSecret)"
+Write-Host "Checking for federated token (AZURE_FEDERATED_TOKEN / file)..."
+
+function Get-GraphTokenSecret {
+    param($TenantId,$ClientId,$ClientSecret)
     $body = @{
         client_id     = $ClientId
         client_secret = $ClientSecret
         scope         = "https://graph.microsoft.com/.default"
         grant_type    = "client_credentials"
     }
-    $tokenUri = "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token"
-    Invoke-RestMethod -Method POST -Uri $tokenUri -Body $body -ContentType "application/x-www-form-urlencoded"
+    Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Body $body -ContentType application/x-www-form-urlencoded
+}
+
+function Get-GraphTokenFederated {
+    param($TenantId,$ClientId)
+    $oidc = $env:AZURE_FEDERATED_TOKEN
+    if (-not $oidc -and (Test-Path $env:AZURE_FEDERATED_TOKEN_FILE)) {
+        $oidc = Get-Content -Raw -Path $env:AZURE_FEDERATED_TOKEN_FILE
+    }
+    if (-not $oidc) {
+        throw "Federated service connection detected but AZURE_FEDERATED_TOKEN not found. Enable 'Allow scripts to access OIDC token' or use secret-based SP."
+    }
+    $body = @{
+        client_id              = $ClientId
+        scope                  = "https://graph.microsoft.com/.default"
+        grant_type             = "client_credentials"
+        client_assertion_type  = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+        client_assertion       = $oidc
+    }
+    Invoke-RestMethod -Method POST -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Body $body -ContentType application/x-www-form-urlencoded
 }
 
 $graphToken = $null
-if ($TenantId -and $ClientId -and $ClientSecret) {
-    Write-Host "🔐 Acquiring Microsoft Graph token via Service Principal (Service Connection)."
-    try {
-        $resp = Get-GraphTokenViaClientCred -TenantId $TenantId -ClientId $ClientId -ClientSecret $ClientSecret
+try {
+    if ($ClientSecret) {
+        Write-Host "🔐 Acquiring token via client secret."
+        $resp = Get-GraphTokenSecret -TenantId $TenantId -ClientId $ClientId -ClientSecret $ClientSecret
+        $graphToken = $resp.access_token
+    } else {
+        Write-Host "🔐 Acquiring token via workload identity federation."
+        $resp = Get-GraphTokenFederated -TenantId $TenantId -ClientId $ClientId
         $graphToken = $resp.access_token
     }
-    catch {
-        Write-Error "Failed to acquire client credentials token: $($_.Exception.Message)"
-        exit 1
-    }
-} else {
-    Write-Host "Attempting legacy Az context token acquisition (no SP credentials passed)."
-    try {
-        $context = Get-AzContext -ErrorAction Stop
-        $graphToken = [Microsoft.Azure.Commands.Common.Authentication.AzureSession]::Instance.AuthenticationFactory.Authenticate(
-            $context.Account,
-            $context.Environment,
-            $context.Tenant.Id.ToString(),
-            $null,
-            [Microsoft.Azure.Commands.Common.Authentication.ShowDialog]::Never,
-            $null,
-            'https://graph.microsoft.com'
-        ).AccessToken
-    }
-    catch {
-        Write-Error "Could not acquire token via Az context: $($_.Exception.Message)"
-        exit 1
-    }
+} catch {
+    Write-Error "Token acquisition failed: $($_.Exception.Message)"
+    exit 1
 }
 
 if (-not $graphToken) {
-    Write-Error "No Microsoft Graph token obtained."
+    Write-Error "No Graph token obtained."
     exit 1
 }
 
 try {
     Connect-MgGraph -AccessToken ($graphToken | ConvertTo-SecureString -AsPlainText -Force) -ErrorAction Stop
     Write-Host "✅ Connected to Microsoft Graph."
-}
-catch {
-    Write-Error "❌ Microsoft Graph connection failed: $($_.Exception.Message)"
+} catch {
+    Write-Error "Graph connect failed: $($_.Exception.Message)"
     exit 1
 }
 
