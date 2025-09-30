@@ -1,7 +1,6 @@
 import * as tl from "azure-pipelines-task-lib/task";
 import { spawn } from "child_process";
 import { logInfo, logError } from "./agentSpecific";
-
 function getSpAuth(scInput: string) {
     const endpointId = tl.getInput(scInput, true)!;
     const auth = tl.getEndpointAuthorization(endpointId, true);
@@ -13,14 +12,11 @@ function getSpAuth(scInput: string) {
     const keys = Object.keys(p);
     tl.debug(`Auth scheme: ${scheme}`);
     tl.debug(`Auth param keys: ${keys.join(", ")}`);
-
     const clientId =
         p["serviceprincipalid"] ||
         p["principalId"] ||
         p["clientId"];
-
     const tenantId = p["tenantid"] || p["tenantId"];
-
     const clientSecret = p["serviceprincipalkey"] || p["clientSecret"]; // may be undefined (federated)
     const wifIssuer = p["workloadIdentityFederationIssuer"];
     const wifSubject = p["workloadIdentityFederationSubject"];
@@ -85,4 +81,3 @@ export async function run() {
     }
 }
 run();
-
