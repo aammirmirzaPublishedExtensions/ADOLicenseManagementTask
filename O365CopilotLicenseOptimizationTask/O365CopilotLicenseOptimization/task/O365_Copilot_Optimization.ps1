@@ -24,6 +24,14 @@ $t = @"
 Write-Host "$($t)"
 ################################################################
 
+# Add simple validation + debug
+Write-Host "TenantId param present: $([bool]$TenantId)"
+Write-Host "ClientId param length : $($ClientId.Length)"
+if (-not $ClientSecret) {
+    Write-Error "ClientSecret not passed from task. Ensure service connection is SP (secret) based, not Managed Identity or Certificate."
+    exit 1
+}
+
 function Get-GraphTokenViaClientCred {
     param(
         [Parameter(Mandatory)] [string] $TenantId,
