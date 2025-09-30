@@ -1,7 +1,12 @@
-[CmdletBinding()]
-param (
-    $inactiveDaysThreshold = 45,
-    $Revoke = "False")  # Number of days of inactivity after which a user is considered inactive
+// filepath: c:\DSV\AzDO\Repos\ADOLicenseManagementTask\O365CopilotLicenseOptimizationTask\O365CopilotLicenseOptimization\task\O365_Copilot_Optimization.ps1
+param(
+    [string] $TenantId,
+    [string] $ClientId,
+    [string] $ClientSecret,
+    [int]    $inactiveDaysThreshold = 30,
+    [string] $Revoke
+)
+
 ################################################################
 ## Signature
 $t = @"
@@ -18,40 +23,66 @@ $t = @"
 "@
 Write-Host "$($t)"
 ################################################################
-# # Import required modules
-# Import-Module Microsoft.Graph.Authentication
-# Import-Module Microsoft.Graph.Reports
-# # Connect to Microsoft Graph (interactive login; uses delegated permissions)
-# Connect-MgGraph -Scopes "Reports.Read.All"
+
+function Get-GraphTokenViaClientCred {
+    param(
+        [Parameter(Mandatory)] [string] $TenantId,
+        [Parameter(Mandatory)] [string] $ClientId,
+        [Parameter(Mandatory)] [string] $ClientSecret
+    )
+    $body = @{
+        client_id     = $ClientId
+        client_secret = $ClientSecret
+        scope         = "https://graph.microsoft.com/.default"
+        grant_type    = "client_credentials"
+    }
+    $tokenUri = "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token"
+    Invoke-RestMethod -Method POST -Uri $tokenUri -Body $body -ContentType "application/x-www-form-urlencoded"
+}
+
+$graphToken = $null
+if ($TenantId -and $ClientId -and $ClientSecret) {
+    Write-Host "🔐 Acquiring Microsoft Graph token via Service Principal (Service Connection)."
+    try {
+        $resp = Get-GraphTokenViaClientCred -TenantId $TenantId -ClientId $ClientId -ClientSecret $ClientSecret
+        $graphToken = $resp.access_token
+    }
+    catch {
+        Write-Error "Failed to acquire client credentials token: $($_.Exception.Message)"
+        exit 1
+    }
+} else {
+    Write-Host "Attempting legacy Az context token acquisition (no SP credentials passed)."
+    try {
+        $context = Get-AzContext -ErrorAction Stop
+        $graphToken = [Microsoft.Azure.Commands.Common.Authentication.AzureSession]::Instance.AuthenticationFactory.Authenticate(
+            $context.Account,
+            $context.Environment,
+            $context.Tenant.Id.ToString(),
+            $null,
+            [Microsoft.Azure.Commands.Common.Authentication.ShowDialog]::Never,
+            $null,
+            'https://graph.microsoft.com'
+        ).AccessToken
+    }
+    catch {
+        Write-Error "Could not acquire token via Az context: $($_.Exception.Message)"
+        exit 1
+    }
+}
+
+if (-not $graphToken) {
+    Write-Error "No Microsoft Graph token obtained."
+    exit 1
+}
+
 try {
-    # Retrieve current Az context (requires prior Connect-AzAccount)
-    $context = Get-AzContext -ErrorAction Stop
-    if (-not $context) {
-        throw "No active Az context found. Run Connect-AzAccount before executing this script."
-    }
-
-    # Acquire Microsoft Graph access token using existing Az session
-    $graphToken = [Microsoft.Azure.Commands.Common.Authentication.AzureSession]::Instance.AuthenticationFactory.Authenticate(
-        $context.Account,
-        $context.Environment,
-        $context.Tenant.Id.ToString(),
-        $null,
-        [Microsoft.Azure.Commands.Common.Authentication.ShowDialog]::Never,
-        $null,
-        'https://graph.microsoft.com'
-    ).AccessToken
-
-    if (-not $graphToken) {
-        throw "Failed to acquire Microsoft Graph access token."
-    }
-
-    # Connect to Microsoft Graph with the acquired token
     Connect-MgGraph -AccessToken ($graphToken | ConvertTo-SecureString -AsPlainText -Force) -ErrorAction Stop
-    Write-Host "✅ Connected to Microsoft Graph using existing Az context."
+    Write-Host "✅ Connected to Microsoft Graph."
 }
 catch {
     Write-Error "❌ Microsoft Graph connection failed: $($_.Exception.Message)"
-    return
+    exit 1
 }
 
 # Define parameters
@@ -75,9 +106,6 @@ try {
             if ($response.value) { $allRaw += $response.value }
             $nextLink = $response.'@odata.nextLink'
         }
-
-        # Threshold (in days) after which a user is considered inactive
-        # $inactiveDaysThreshold = 45  # Adjust as needed
 
         # Transform each record into a PSCustomObject with readable column names
         $records = $allRaw | ForEach-Object {
