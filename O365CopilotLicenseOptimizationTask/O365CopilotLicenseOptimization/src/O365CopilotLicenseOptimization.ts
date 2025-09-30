@@ -5,6 +5,49 @@ import {
     logError,
     getSystemAccessToken
 } from "./agentSpecific";
+
+function getSpCredsFromServiceConnection(scName: string) {
+    const endpointId = tl.getInput(scName, true)!;
+    const endpointAuth = tl.getEndpointAuthorization(endpointId, true);
+    if (!endpointAuth) {
+        throw new Error(`Unable to retrieve authorization object for service connection '${endpointId}'.`);
+    }
+
+    const params = endpointAuth.parameters || {};
+    const allKeys = Object.keys(params);
+    tl.debug(`Service connection auth scheme: ${endpointAuth.scheme}`);
+    tl.debug(`Service connection available auth parameter keys: ${allKeys.join(", ")}`);
+
+    // Azure RM (Service Principal secret) standard keys
+    let clientId =
+        params["serviceprincipalid"] ||
+        params["principalId"] ||
+        params["clientId"];
+
+    let clientSecret =
+        params["serviceprincipalkey"] ||
+        params["clientSecret"];
+
+    let tenantId =
+        params["tenantid"] ||
+        params["tenantId"];
+
+    // Certificate-based SP (no client secret) – unsupported for now
+    const certificate = params["servicePrincipalCertificate"] || params["certificate"];
+    if (!clientSecret && certificate) {
+        throw new Error("Certificate-based service connections currently not supported by this task. Use SP (secret) auth.");
+    }
+
+    if (!clientId || !clientSecret || !tenantId) {
+        throw new Error(
+            `Service connection missing one or more required parameters. Found keys: ${allKeys.join(", ")}. ` +
+            "Expecting service principal (secret) connection with: serviceprincipalid, serviceprincipalkey, tenantid."
+        );
+    }
+
+    return { clientId, clientSecret, tenantId };
+}
+
 export async function run() {
     try {
         // Get the build and release details
@@ -29,25 +72,21 @@ export async function run() {
             args.push("-Revoke", Revoke);
         }
 
-        if (azureServiceConnection) {
-            logInfo("Azure Service Connection provided. Extracting SP credentials.");
-            const auth = tl.getEndpointAuthorization(azureServiceConnection, false);
-            if (!auth) {
-                throw new Error("Failed to retrieve service connection authorization.");
-            }
-            const clientId = auth.parameters["serviceprincipalid"];
-            const clientSecret = auth.parameters["serviceprincipalkey"];
-            const tenantId = auth.parameters["tenantid"];
-            if (!clientId || !clientSecret || !tenantId) {
-                throw new Error("Service connection missing one of: serviceprincipalid / serviceprincipalkey / tenantid.");
-            }
-            // Pass silently (avoid logging secrets)
-            args.push("-TenantId", tenantId);
-            args.push("-ClientId", clientId);
-            args.push("-ClientSecret", clientSecret);
-        } else {
-            logInfo("No Azure Service Connection supplied. Script will attempt legacy Az context token acquisition.");
+        const scInputName = "azureServiceConnection";
+        let spCreds: { clientId: string; clientSecret: string; tenantId: string } | undefined;
+
+        try {
+            spCreds = getSpCredsFromServiceConnection(scInputName);
+            logInfo("Azure Service Connection credentials resolved.");
+        } catch (e) {
+            tl.setResult(tl.TaskResult.Failed, (e as Error).message);
+            return;
         }
+
+        // Append to args (DO NOT LOG secrets)
+        args.push("-TenantId", spCreds.tenantId);
+        args.push("-ClientId", spCreds.clientId);
+        args.push("-ClientSecret", spCreds.clientSecret);
 
         logInfo(`Invoking script with ${args.length - 1} arguments (secrets not logged).`);
         const child = spawn(executable, args, { windowsVerbatimArguments: true });
