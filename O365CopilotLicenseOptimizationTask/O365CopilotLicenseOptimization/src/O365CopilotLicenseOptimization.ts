@@ -1,100 +1,86 @@
 import * as tl from "azure-pipelines-task-lib/task";
 import { spawn } from "child_process";
-import {
-    logInfo,
-    logError,
-    getSystemAccessToken
-} from "./agentSpecific";
+import { logInfo, logError } from "./agentSpecific";
 
-function getSpCredsFromServiceConnection(scName: string) {
-    const endpointId = tl.getInput(scName, true)!;
-    const endpointAuth = tl.getEndpointAuthorization(endpointId, true);
-    if (!endpointAuth) {
-        throw new Error(`Unable to retrieve authorization object for service connection '${endpointId}'.`);
+function getSpAuth(scInput: string) {
+    const endpointId = tl.getInput(scInput, true)!;
+    const auth = tl.getEndpointAuthorization(endpointId, true);
+    if (!auth) {
+        throw new Error(`No authorization object for service connection id '${endpointId}'.`);
     }
+    const p = auth.parameters || {};
+    const scheme = auth.scheme || "";
+    const keys = Object.keys(p);
+    tl.debug(`Auth scheme: ${scheme}`);
+    tl.debug(`Auth param keys: ${keys.join(", ")}`);
 
-    const params = endpointAuth.parameters || {};
-    const allKeys = Object.keys(params);
-    tl.debug(`Service connection auth scheme: ${endpointAuth.scheme}`);
-    tl.debug(`Service connection available auth parameter keys: ${allKeys.join(", ")}`);
+    const clientId =
+        p["serviceprincipalid"] ||
+        p["principalId"] ||
+        p["clientId"];
 
-    // Azure RM (Service Principal secret) standard keys
-    let clientId =
-        params["serviceprincipalid"] ||
-        params["principalId"] ||
-        params["clientId"];
+    const tenantId = p["tenantid"] || p["tenantId"];
 
-    let clientSecret =
-        params["serviceprincipalkey"] ||
-        params["clientSecret"];
+    const clientSecret = p["serviceprincipalkey"] || p["clientSecret"]; // may be undefined (federated)
+    const wifIssuer = p["workloadIdentityFederationIssuer"];
+    const wifSubject = p["workloadIdentityFederationSubject"];
 
-    let tenantId =
-        params["tenantid"] ||
-        params["tenantId"];
-
-    // Certificate-based SP (no client secret) – unsupported for now
-    const certificate = params["servicePrincipalCertificate"] || params["certificate"];
-    if (!clientSecret && certificate) {
-        throw new Error("Certificate-based service connections currently not supported by this task. Use SP (secret) auth.");
-    }
-
-    if (!clientId || !clientSecret || !tenantId) {
-        throw new Error(
-            `Service connection missing one or more required parameters. Found keys: ${allKeys.join(", ")}. ` +
-            "Expecting service principal (secret) connection with: serviceprincipalid, serviceprincipalkey, tenantid."
-        );
-    }
-
-    return { clientId, clientSecret, tenantId };
+    return {
+        clientId,
+        tenantId,
+        clientSecret,
+        isFederated: !clientSecret && !!(wifIssuer || wifSubject),
+        rawParams: keys
+    };
 }
 
 export async function run() {
     try {
-        // Get the build and release details
-        let inactiveDaysThreshold = tl.getInput("inactiveDaysThreshold");
-        let Revoke = tl.getInput("Revoke");
-        const azureServiceConnection = tl.getInput("azureServiceConnection", false);
+        const scName = "azureServiceConnection";
+        const inactive = tl.getInput("inactiveDaysThreshold", true);
+        const revoke = tl.getInput("Revoke", false);
 
-        let executable = "pwsh";
-        if (tl.getVariable("AGENT.OS") === "Windows_NT" && !tl.getBoolInput("usePSCore")) {
-            executable = "powershell.exe";
-        }
-        logInfo(`Using executable '${executable}'`);
-
-        // Base args (script path)
-        const scriptPath = __dirname + "\\O365_Copilot_Optimization.ps1";
-        let args: string[] = [ scriptPath ];
-
-        if (inactiveDaysThreshold) {
-            args.push("-inactiveDaysThreshold", inactiveDaysThreshold);
-        }
-        if (Revoke) {
-            args.push("-Revoke", Revoke);
+        const auth = getSpAuth(scName);
+        if (!auth.clientId || !auth.tenantId) {
+            throw new Error(`Service connection missing clientId or tenantId. Keys present: ${auth.rawParams.join(", ")}`);
         }
 
-        const scInputName = "azureServiceConnection";
-        let spCreds: { clientId: string; clientSecret: string; tenantId: string } | undefined;
-
-        try {
-            spCreds = getSpCredsFromServiceConnection(scInputName);
-            logInfo("Azure Service Connection credentials resolved.");
-        } catch (e) {
-            tl.setResult(tl.TaskResult.Failed, (e as Error).message);
-            return;
+        let exe = "pwsh";
+        if (tl.getVariable("AGENT.OS") === "Windows_NT") {
+            exe = "powershell.exe";
         }
 
-        // Append to args (DO NOT LOG secrets)
-        args.push("-TenantId", spCreds.tenantId);
-        args.push("-ClientId", spCreds.clientId);
-        args.push("-ClientSecret", spCreds.clientSecret);
+        const scriptPath = `${__dirname}\\O365_Copilot_Optimization.ps1`;
+        const args: string[] = [scriptPath, "-TenantId", auth.tenantId, "-ClientId", auth.clientId, "-inactiveDaysThreshold", inactive!];
+        if (revoke) args.push("-Revoke", revoke);
 
-        logInfo(`Invoking script with ${args.length - 1} arguments (secrets not logged).`);
-        const child = spawn(executable, args, { windowsVerbatimArguments: true });
-        child.stdout.on("data", (data) => logInfo(data.toString()));
-        child.stderr.on("data", (data) => logError(data.toString()));
-        child.on("exit", () => logInfo("Script finished"));
-    } catch (err) {
-        logError(err);
+        if (auth.clientSecret) {
+            // Secret-based SP
+            args.push("-ClientSecret", auth.clientSecret);
+            logInfo("Using client secret auth (service principal).");
+        } else if (auth.isFederated) {
+            logInfo("Federated (workload identity) service connection detected (no secret). Expecting AZURE_FEDERATED_TOKEN.");
+            // DO NOT fail yet; PowerShell will attempt federated flow using env AZURE_FEDERATED_TOKEN
+        } else {
+            throw new Error("Neither client secret nor federated parameters detected.");
+        }
+
+        logInfo(`Launching PowerShell (${exe})`);
+        const child = spawn(exe, args, { windowsVerbatimArguments: true });
+
+        child.stdout.on("data", d => process.stdout.write(d));
+        child.stderr.on("data", d => process.stderr.write(d));
+
+        child.on("close", code => {
+            if (code !== 0) {
+                tl.setResult(tl.TaskResult.Failed, `Script exited with code ${code}`);
+            } else {
+                tl.setResult(tl.TaskResult.Succeeded, "Completed");
+            }
+        });
+    } catch (e: any) {
+        logError(e.message);
+        tl.setResult(tl.TaskResult.Failed, e.message);
     }
 }
 run();
