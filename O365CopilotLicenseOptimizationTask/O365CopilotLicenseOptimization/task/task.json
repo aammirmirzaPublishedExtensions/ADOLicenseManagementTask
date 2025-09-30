@@ -25,22 +25,26 @@
     "showEnvironmentVariables": true,
     "inputs": [
         {
+            "name": "azureServiceConnection",
+            "type": "connectedService:azureRM",
+            "label": "Azure Service Connection",
+            "required": true,
+            "helpMarkDown": "Azure RM service connection (Service Principal) used to request a Microsoft Graph token for Reports.Read.All."
+        },
+        {
             "name": "inactiveDaysThreshold",
             "type": "string",
             "label": "Inactive Days Threshold",
             "required": true,
-            "isConfidential": false,
-            "defaultValue": "",
-            "helpMarkDown": "Specify the number of inactive days to consider for user license evaluation."
+            "defaultValue": "30",
+            "helpMarkDown": "Users with no Copilot activity for this many days will be flagged."
         },
         {
             "name": "Revoke",
-            "type": "boolean",
-            "label": "Revoke Licenses Switch",
+            "type": "string",
+            "label": "Revoke Flag",
             "required": false,
-            "isConfidential": false,
-            "defaultValue": "false",
-            "helpMarkDown": "Specify whether to revoke user licenses for optimization."
+            "helpMarkDown": "Set to 'Yes' (or any non-empty value) to mark candidates for license revocation."
         }
     ],
     "instanceNameFormat": "O365 Copilot License Optimization",
@@ -55,4 +59,4 @@
           "GeneratingScript": "Generating script.",
           "JS_InvalidErrorActionPreference": "Invalid ErrorActionPreference '%s'. The value must be one of: 'Stop', or 'SilentlyContinue'"
       }
-    }
+}
