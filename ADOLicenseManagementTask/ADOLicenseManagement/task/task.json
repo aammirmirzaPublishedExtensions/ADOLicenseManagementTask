@@ -133,7 +133,7 @@
     ],
     "instanceNameFormat": "ADO License Management",
     "execution": {
-        "Node16": {
+        "Node": {
           "target": "$(currentDirectory)/ADOLicenseManagement.js",
           "argumentFormat": "",
           "workingDirectory": "$(currentDirectory)"
